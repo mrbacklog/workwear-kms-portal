@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
@@ -97,15 +97,12 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 }
 
 export default function KmsConfirmPage() {
-  const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
-  const { customerName, customerSlug } = useKmsAuth();
+  const { customerName } = useKmsAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const state = location.state as LocationState | null;
   const order = state?.order;
-
-  const effectiveSlug = slug ?? customerSlug ?? '';
 
   useConfetti(canvasRef);
 
@@ -318,7 +315,7 @@ export default function KmsConfirmPage() {
             }}
           >
             <Link
-              to={`/kms/${effectiveSlug}/bestellen`}
+              to="/bestellen"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -352,7 +349,7 @@ export default function KmsConfirmPage() {
             </Link>
 
             <Link
-              to={`/kms/${effectiveSlug}`}
+              to="/"
               style={{
                 padding: '12px 20px',
                 background: 'none',

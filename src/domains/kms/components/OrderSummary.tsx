@@ -8,7 +8,6 @@ interface OrderSummaryProps {
   isOpen: boolean;
   onClose: () => void;
   onOrderPlaced: (order: KmsOrderResponse) => void;
-  slug: string;
   authHeader: Record<string, string>;
 }
 
@@ -23,7 +22,6 @@ export function OrderSummary({
   isOpen,
   onClose,
   onOrderPlaced,
-  slug,
   authHeader,
 }: OrderSummaryProps) {
   const [reference, setReference] = useState('');
@@ -67,7 +65,7 @@ export function OrderSummary({
         notes: notes.trim() || undefined,
       };
 
-      const res = await fetch(`${API_BASE}/api/v1/kms/${slug}/orders`, {
+      const res = await fetch(`${API_BASE}/api/v1/kms/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

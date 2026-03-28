@@ -14,10 +14,10 @@ function withSuspense(element: React.ReactElement) {
 export function kmsRoutes() {
   return (
     <>
-      <Route path="/kms/:slug" element={withSuspense(<KmsAuthPage />)} />
-      <Route path="/kms/:slug/auth/:token" element={withSuspense(<KmsVerifyPage />)} />
-      <Route path="/kms/:slug/bestellen" element={withSuspense(<KmsOrderPage />)} />
-      <Route path="/kms/:slug/bevestiging" element={withSuspense(<KmsConfirmPage />)} />
+      <Route path="/" element={withSuspense(<KmsAuthPage />)} />
+      <Route path="/auth/:token" element={withSuspense(<KmsVerifyPage />)} />
+      <Route path="/bestellen" element={withSuspense(<KmsOrderPage />)} />
+      <Route path="/bevestiging" element={withSuspense(<KmsConfirmPage />)} />
     </>
   );
 }

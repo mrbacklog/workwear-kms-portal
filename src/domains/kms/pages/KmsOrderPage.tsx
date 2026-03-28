@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
 import { useCart } from '../hooks/useCart';
@@ -71,16 +71,15 @@ function CardSkeleton() {
 }
 
 export default function KmsOrderPage() {
-  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { customerName, isAuthenticated, authHeader, customerSlug } = useKmsAuth();
+  const { customerName, isAuthenticated, authHeader } = useKmsAuth();
 
   // Redirect to auth if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate(`/kms/${slug ?? customerSlug ?? ''}`, { replace: true });
+      navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate, slug, customerSlug]);
+  }, [isAuthenticated, navigate]);
 
   const [products, setProducts] = useState<KmsPortalProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,19 +92,16 @@ export default function KmsOrderPage() {
   const { cart, setQuantity, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
-  const effectiveSlug = slug ?? customerSlug ?? '';
-
   async function fetchProducts() {
-    if (!effectiveSlug) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/kms/${effectiveSlug}/products`, {
+      const res = await fetch(`${API_BASE}/api/v1/kms/products`, {
         headers: authHeader,
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          navigate(`/kms/${effectiveSlug}`, { replace: true });
+          navigate('/', { replace: true });
           return;
         }
         throw new Error(`HTTP ${res.status}`);
@@ -124,7 +120,7 @@ export default function KmsOrderPage() {
       void fetchProducts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveSlug, isAuthenticated]);
+  }, [isAuthenticated]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -156,7 +152,7 @@ export default function KmsOrderPage() {
 
   function handleOrderPlaced(order: KmsOrderResponse) {
     clearCart();
-    navigate(`/kms/${effectiveSlug}/bevestiging`, {
+    navigate('/bevestiging', {
       state: { order },
     });
   }
@@ -469,7 +465,6 @@ export default function KmsOrderPage() {
         isOpen={showSummary}
         onClose={() => setShowSummary(false)}
         onOrderPlaced={handleOrderPlaced}
-        slug={effectiveSlug}
         authHeader={authHeader}
       />
     </>

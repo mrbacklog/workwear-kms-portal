@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
 import { API_BASE } from '@/lib/api';
@@ -50,7 +49,6 @@ function VkLogoLarge() {
 }
 
 export default function KmsAuthPage() {
-  const { slug } = useParams<{ slug: string }>();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -58,13 +56,13 @@ export default function KmsAuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!slug || !email.trim()) return;
+    if (!email.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/kms/${slug}/auth/request`, {
+      const response = await fetch(`${API_BASE}/api/v1/kms/auth/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),

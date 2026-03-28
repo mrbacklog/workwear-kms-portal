@@ -7,7 +7,7 @@ import type { KmsAuthResponse } from '../types';
 import { API_BASE } from '@/lib/api';
 
 export default function KmsVerifyPage() {
-  const { slug, token } = useParams<{ slug: string; token: string }>();
+  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { login } = useKmsAuth();
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -20,14 +20,14 @@ export default function KmsVerifyPage() {
     verifyCalledRef.current = true;
 
     const verify = async () => {
-      if (!slug || !token) {
+      if (!token) {
         setErrorMessage('Ongeldige URL parameters.');
         setStatus('error');
         return;
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/v1/kms/${slug}/auth/verify`, {
+        const response = await fetch(`${API_BASE}/api/v1/kms/auth/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
@@ -42,7 +42,7 @@ export default function KmsVerifyPage() {
 
         const data: KmsAuthResponse = await response.json();
         login(data);
-        navigate(`/kms/${slug}/bestellen`, { replace: true });
+        navigate('/bestellen', { replace: true });
       } catch {
         setErrorMessage('Er is een verbindingsfout opgetreden. Probeer het opnieuw.');
         setStatus('error');
@@ -50,7 +50,7 @@ export default function KmsVerifyPage() {
     };
 
     void verify();
-  }, [slug, token, navigate, login]);
+  }, [token, navigate, login]);
 
   return (
     <KmsLayout>
@@ -127,7 +127,7 @@ export default function KmsVerifyPage() {
             </p>
 
             <Link
-              to={`/kms/${slug ?? ''}`}
+              to="/"
               style={{
                 display: 'inline-block',
                 marginTop: 28,
