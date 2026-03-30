@@ -4,6 +4,7 @@ import { kmsColors, kmsFont } from '../lib/kms-theme';
 interface CartBarProps {
   cart: CartState;
   onClick: () => void;
+  onClear: () => void;
 }
 
 function formatPrice(cents: number): string {
@@ -12,7 +13,7 @@ function formatPrice(cents: number): string {
   );
 }
 
-export function CartBar({ cart, onClick }: CartBarProps) {
+export function CartBar({ cart, onClick, onClear }: CartBarProps) {
   const hasItems = cart.totalItems > 0;
 
   return (
@@ -120,17 +121,21 @@ export function CartBar({ cart, onClick }: CartBarProps) {
 
             {/* Right: total + arrow */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span
-                key={cart.totalCents}
-                style={{
-                  fontSize: 17,
-                  fontWeight: 800,
-                  fontFamily: kmsFont,
-                  animation: 'kms-total-update 200ms ease-out',
-                }}
-              >
-                {formatPrice(cart.totalCents)}
-              </span>
+              <div style={{ textAlign: 'right' }}>
+                <span
+                  key={cart.totalCents}
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 800,
+                    fontFamily: kmsFont,
+                    animation: 'kms-total-update 200ms ease-out',
+                    display: 'block',
+                  }}
+                >
+                  {formatPrice(cart.totalCents)}
+                </span>
+                <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.75 }}>excl. BTW</span>
+              </div>
               <svg
                 width="18"
                 height="18"
@@ -142,6 +147,26 @@ export function CartBar({ cart, onClick }: CartBarProps) {
                 <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
+          </button>
+
+          {/* Clear cart link */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onClear(); }}
+            style={{
+              display: 'block',
+              margin: '8px auto 0',
+              background: 'none',
+              border: 'none',
+              color: '#999',
+              fontSize: 12,
+              fontFamily: kmsFont,
+              cursor: 'pointer',
+              padding: '4px 8px',
+              textDecoration: 'underline',
+              textUnderlineOffset: 2,
+            }}
+          >
+            Winkelwagen legen
           </button>
         </div>
       </div>

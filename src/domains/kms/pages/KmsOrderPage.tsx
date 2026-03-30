@@ -465,7 +465,7 @@ export default function KmsOrderPage() {
       </KmsLayout>
 
       {/* Sticky cart bar */}
-      <CartBar cart={cart} onClick={handleCartClick} />
+      <CartBar cart={cart} onClick={handleCartClick} onClear={clearCart} />
 
       {/* Product detail panel */}
       <ProductDetail
