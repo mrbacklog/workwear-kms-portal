@@ -89,7 +89,7 @@ export default function KmsOrderPage() {
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { cart, setQuantity, clearCart } = useCart();
+  const { cart, addItem, setQuantity, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
   async function fetchProducts() {
@@ -439,9 +439,24 @@ export default function KmsOrderPage() {
                   onToggle={() => handleToggle(index)}
                   onDetailClick={() => handleOpenDetail(product)}
                   cart={cart}
-                  onQuantityChange={(variantId, quantity) =>
-                    setQuantity(variantId, quantity)
-                  }
+                  onQuantityChange={(variantId, quantity) => {
+                    const existing = cart.items.find(i => i.variantId === variantId);
+                    if (!existing && quantity > 0) {
+                      const variant = product.variants.find(v => v.id === variantId);
+                      if (variant) {
+                        addItem({
+                          variantId: variant.id,
+                          modelName: product.model_name,
+                          color: product.color,
+                          size: variant.size,
+                          ean: variant.ean,
+                          priceCents: variant.price_cents ?? 0,
+                        });
+                      }
+                    } else {
+                      setQuantity(variantId, quantity);
+                    }
+                  }}
                 />
               );
             })}
