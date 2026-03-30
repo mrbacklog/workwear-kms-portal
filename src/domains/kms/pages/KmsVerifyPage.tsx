@@ -41,7 +41,14 @@ export default function KmsVerifyPage() {
         }
 
         const data: KmsAuthResponse = await response.json();
+        // Clear any stale auth before storing new token
+        localStorage.removeItem('kms_token');
+        localStorage.removeItem('kms_customer_name');
+        localStorage.removeItem('kms_customer_slug');
+        // Store new auth
         login(data);
+        // Small delay to ensure localStorage is written before navigation
+        await new Promise(r => setTimeout(r, 50));
         navigate('/bestellen', { replace: true });
       } catch {
         setErrorMessage('Er is een verbindingsfout opgetreden. Probeer het opnieuw.');
