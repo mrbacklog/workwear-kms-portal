@@ -349,7 +349,7 @@ export default function KmsConfirmPage() {
             </Link>
 
             <Link
-              to="/"
+              to="/bestellen"
               style={{
                 padding: '12px 20px',
                 background: 'none',
@@ -372,7 +372,7 @@ export default function KmsConfirmPage() {
                 (e.currentTarget as HTMLAnchorElement).style.color = '#666';
               }}
             >
-              Terug naar startpagina
+              Terug naar bestelformulier
             </Link>
           </div>
         </div>
