@@ -5,46 +5,11 @@ import { API_BASE } from '@/lib/api';
 
 function VkLogoLarge() {
   return (
-    <div
-      style={{
-        width: 72,
-        height: 72,
-        background: kmsColors.black,
-        borderRadius: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        margin: '0 auto',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: kmsColors.orange,
-        }}
-      />
-      <span
-        style={{
-          fontFamily: kmsFont,
-          fontWeight: 800,
-          fontSize: 26,
-          letterSpacing: '-0.5px',
-          color: kmsColors.white,
-          lineHeight: 1,
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        <span style={{ color: kmsColors.orange }}>V</span>
-        <span style={{ color: kmsColors.cyan }}>K</span>
-      </span>
-    </div>
+    <img
+      src="/vk-logo-zwart.png"
+      alt="Van Kruiningen Reklame"
+      style={{ height: 60, width: 'auto', margin: '0 auto', display: 'block' }}
+    />
   );
 }
 

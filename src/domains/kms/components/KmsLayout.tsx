@@ -66,22 +66,17 @@ function VkLogoMark({
         />
       )}
 
-      {/* VK letters */}
-      <span
+      {/* Official logo */}
+      <img
+        src="/vk-logo-wit.png"
+        alt="Van Kruiningen Reklame"
         style={{
-          fontFamily: kmsFont,
-          fontWeight: 800,
-          fontSize: 16,
-          letterSpacing: '-0.5px',
-          color: kmsColors.white,
-          lineHeight: 1,
+          height: 32,
+          width: 'auto',
           position: 'relative',
           zIndex: 1,
         }}
-      >
-        <span style={{ color: kmsColors.orange }}>V</span>
-        <span style={{ color: kmsColors.cyan }}>K</span>
-      </span>
+      />
     </div>
   );
 }
