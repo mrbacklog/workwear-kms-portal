@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal, kmsApiBase } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 import type { KmsAuthResponse } from '../types';
-import { API_BASE } from '@/lib/api';
 
 export default function KmsVerifyPage() {
-  const { token } = useParams<{ token: string }>();
+  const { slug: urlSlug, token } = useParams<{ slug: string; token: string }>();
+  const slug = urlSlug || KMS_DEFAULT_SLUG;
   const navigate = useNavigate();
   const { login } = useKmsAuth();
+  const { t } = useContext(BolusModeContext);
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
-  const [errorMessage, setErrorMessage] = useState<string>('Link is ongeldig of verlopen.');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const verifyCalledRef = useRef(false);
 
   useEffect(() => {
@@ -20,14 +22,14 @@ export default function KmsVerifyPage() {
     verifyCalledRef.current = true;
 
     const verify = async () => {
-      if (!token) {
-        setErrorMessage('Ongeldige URL parameters.');
+      if (!slug || !token) {
+        setErrorMessage(t('verify.error_params'));
         setStatus('error');
         return;
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/v1/kms/auth/verify`, {
+        const response = await fetch(`${kmsApiBase}/api/v1/kms/auth/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
@@ -35,29 +37,22 @@ export default function KmsVerifyPage() {
 
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
-          setErrorMessage((data as { detail?: string }).detail ?? 'Link is ongeldig of verlopen.');
+          setErrorMessage((data as { detail?: string }).detail ?? t('verify.error_default'));
           setStatus('error');
           return;
         }
 
         const data: KmsAuthResponse = await response.json();
-        // Clear any stale auth before storing new token
-        localStorage.removeItem('kms_token');
-        localStorage.removeItem('kms_customer_name');
-        localStorage.removeItem('kms_customer_slug');
-        // Store new auth
         login(data);
-        // Small delay to ensure localStorage is written before navigation
-        await new Promise(r => setTimeout(r, 50));
-        navigate('/bestellen', { replace: true });
+        navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
       } catch {
-        setErrorMessage('Er is een verbindingsfout opgetreden. Probeer het opnieuw.');
+        setErrorMessage(t('verify.error_connection'));
         setStatus('error');
       }
     };
 
     void verify();
-  }, [token, navigate, login]);
+  }, [slug, token, navigate, login, t]);
 
   return (
     <KmsLayout>
@@ -68,7 +63,7 @@ export default function KmsVerifyPage() {
               style={{
                 width: 48,
                 height: 48,
-                border: `3px solid ${kmsColors.lightGray}`,
+                border: `3px solid ${kmsColors.border}`,
                 borderTopColor: kmsColors.orange,
                 borderRadius: '50%',
                 animation: 'kms-spin 0.7s linear infinite',
@@ -79,11 +74,11 @@ export default function KmsVerifyPage() {
               style={{
                 fontFamily: kmsFont,
                 fontSize: 15,
-                color: '#666666',
+                color: kmsColors.textSecondary,
                 marginTop: 20,
               }}
             >
-              Link wordt gecontroleerd...
+              {t('verify.loading')}
             </p>
           </>
         )}
@@ -95,14 +90,14 @@ export default function KmsVerifyPage() {
                 width: 64,
                 height: 64,
                 borderRadius: '50%',
-                background: '#FEE2E2',
+                background: kmsColors.errorBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto',
               }}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={kmsColors.error} strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
@@ -114,18 +109,18 @@ export default function KmsVerifyPage() {
                 fontFamily: kmsFont,
                 fontSize: 20,
                 fontWeight: 700,
-                color: kmsColors.black,
+                color: kmsColors.text,
                 marginTop: 20,
               }}
             >
-              Link ongeldig
+              {t('verify.error_title')}
             </h2>
 
             <p
               style={{
                 fontFamily: kmsFont,
                 fontSize: 15,
-                color: '#666666',
+                color: kmsColors.textSecondary,
                 marginTop: 8,
                 lineHeight: 1.6,
               }}
@@ -134,7 +129,7 @@ export default function KmsVerifyPage() {
             </p>
 
             <Link
-              to="/"
+              to={isKmsPortal ? '/' : `/kms/${slug ?? ''}`}
               style={{
                 display: 'inline-block',
                 marginTop: 28,
@@ -145,7 +140,7 @@ export default function KmsVerifyPage() {
                 textDecoration: 'none',
               }}
             >
-              Terug naar aanmelden
+              {t('verify.back')}
             </Link>
           </div>
         )}

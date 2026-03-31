@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import type { KmsPortalProduct } from '../types';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 
 interface ProductDetailProps {
   product: KmsPortalProduct | null;
@@ -51,6 +52,8 @@ function colorNameToHex(colorName: string): string {
 }
 
 export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) {
+  const { t } = useContext(BolusModeContext);
+
   // Lock body scroll when panel open
   useEffect(() => {
     if (isOpen) {
@@ -88,6 +91,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
             border-radius: 18px 0 0 18px !important;
             max-height: 100vh !important;
             transform: translateX(100%) !important;
+            background: ${kmsColors.surface} !important;
           }
           .kms-panel-sheet.open {
             transform: translateX(0) !important;
@@ -99,7 +103,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
           bottom: 0;
           left: 0;
           right: 0;
-          background: #fff;
+          background: ${kmsColors.surface};
           border-radius: 18px 18px 0 0;
           max-height: 92vh;
           overflow-y: auto;
@@ -139,7 +143,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
             style={{
               width: 40,
               height: 4,
-              background: '#CCCCCC',
+              background: 'rgba(255,255,255,0.15)',
               borderRadius: 999,
               margin: '14px auto 0',
             }}
@@ -154,20 +158,20 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
               padding: '16px 20px',
               position: 'sticky',
               top: 0,
-              background: kmsColors.white,
+              background: kmsColors.surface,
               zIndex: 1,
-              borderBottom: '1px solid #F0F0F0',
+              borderBottom: `1px solid ${kmsColors.border}`,
             }}
           >
             <span
               style={{
                 fontSize: 16,
                 fontWeight: 700,
-                color: kmsColors.black,
+                color: kmsColors.text,
                 fontFamily: kmsFont,
               }}
             >
-              Productdetails
+              {t('detail.title')}
             </span>
             <button
               onClick={onClose}
@@ -175,23 +179,23 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
-                background: '#F5F5F5',
+                background: kmsColors.surfaceHover,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#444444',
+                color: 'rgba(255,255,255,0.6)',
                 fontSize: 16,
                 cursor: 'pointer',
                 border: 'none',
                 transition: 'background 150ms ease',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#CCCCCC';
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = '#F5F5F5';
+                (e.currentTarget as HTMLButtonElement).style.background = kmsColors.surfaceHover;
               }}
-              aria-label="Sluiten"
+              aria-label={t('detail.close')}
             >
               <svg
                 width="16"
@@ -218,7 +222,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                     width: '100%',
                     aspectRatio: '4/3',
                     objectFit: 'cover',
-                    background: '#F5F5F5',
+                    background: kmsColors.surfaceHover,
                     display: 'block',
                   }}
                 />
@@ -231,7 +235,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 80,
-                    background: `${colorHex}18`,
+                    background: `${colorHex}12`,
                     color: colorHex,
                     fontFamily: kmsFont,
                     fontWeight: 700,
@@ -269,7 +273,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                   style={{
                     fontSize: 22,
                     fontWeight: 700,
-                    color: kmsColors.black,
+                    color: kmsColors.text,
                     lineHeight: 1.2,
                     fontFamily: kmsFont,
                     marginTop: -8,
@@ -285,7 +289,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                     alignItems: 'center',
                     gap: 8,
                     fontSize: 13,
-                    color: '#666',
+                    color: 'rgba(255,255,255,0.5)',
                     fontFamily: kmsFont,
                   }}
                 >
@@ -294,7 +298,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                       width: 14,
                       height: 14,
                       borderRadius: '50%',
-                      border: '1.5px solid rgba(0,0,0,0.12)',
+                      border: '1.5px solid rgba(255,255,255,0.1)',
                       background: colorHex,
                       flexShrink: 0,
                     }}
@@ -310,12 +314,12 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                     <span
                       style={{
                         fontSize: 12,
-                        color: '#888',
+                        color: kmsColors.textMuted,
                         fontWeight: 500,
                         fontFamily: kmsFont,
                       }}
                     >
-                      vanaf
+                      {t('detail.price_from')}
                     </span>
                     <span
                       style={{
@@ -337,14 +341,14 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                       style={{
                         fontSize: 12,
                         fontWeight: 600,
-                        color: '#888',
+                        color: kmsColors.textMuted,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         marginBottom: 8,
                         fontFamily: kmsFont,
                       }}
                     >
-                      Beschikbare maten
+                      {t('detail.available_sizes')}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {product.variants.map((variant) => (
@@ -353,10 +357,10 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                           style={{
                             padding: '6px 14px',
                             borderRadius: 999,
-                            background: '#F5F5F5',
+                            background: kmsColors.surfaceHover,
                             fontSize: 13,
                             fontWeight: 600,
-                            color: '#444',
+                            color: 'rgba(255,255,255,0.6)',
                             fontFamily: kmsFont,
                           }}
                         >
@@ -378,7 +382,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                   >
                     <div
                       style={{
-                        background: '#FAFAFA',
+                        background: kmsColors.surfaceHover,
                         borderRadius: 12,
                         padding: 12,
                       }}
@@ -386,7 +390,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                       <div
                         style={{
                           fontSize: 11,
-                          color: '#888',
+                          color: kmsColors.textMuted,
                           fontWeight: 600,
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
@@ -394,17 +398,17 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                           fontFamily: kmsFont,
                         }}
                       >
-                        Varianten
+                        {t('detail.variants')}
                       </div>
                       <div
                         style={{
                           fontSize: 14,
                           fontWeight: 600,
-                          color: kmsColors.black,
+                          color: kmsColors.text,
                           fontFamily: kmsFont,
                         }}
                       >
-                        {product.variants.length} maten
+                        {product.variants.length} {t('detail.sizes_count')}
                       </div>
                     </div>
                   </div>

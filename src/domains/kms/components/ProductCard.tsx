@@ -9,6 +9,7 @@ interface ProductCardProps {
   onDetailClick: () => void;
   cart: CartState;
   onQuantityChange: (variantId: string, quantity: number) => void;
+  index?: number;
 }
 
 function formatPrice(cents: number): string {
@@ -61,6 +62,7 @@ export function ProductCard({
   onDetailClick,
   cart,
   onQuantityChange,
+  index,
 }: ProductCardProps) {
   const selectedQuantity = product.variants.reduce((sum, variant) => {
     return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
@@ -70,199 +72,209 @@ export function ProductCard({
   const colorHex = colorNameToHex(product.color);
 
   return (
-    <div
-      style={{
-        background: kmsColors.white,
-        borderRadius: 18,
-        border: `1.5px solid ${hasSelection ? kmsColors.orange : 'transparent'}`,
-        boxShadow: hasSelection
-          ? `0 0 0 3px rgba(241,142,0,0.08), 0 1px 3px rgba(0,0,0,0.08)`
-          : '0 1px 3px rgba(0,0,0,0.08)',
-        overflow: 'hidden',
-        transition: 'border-color 150ms ease, box-shadow 150ms ease',
-      }}
-    >
-      {/* Card header — tap to expand */}
-      <button
-        onClick={onToggle}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          padding: '14px 16px',
-          cursor: 'pointer',
-          userSelect: 'none',
-          background: 'none',
-          border: 'none',
-          width: '100%',
-          textAlign: 'left',
-          fontFamily: kmsFont,
-          transition: 'background 150ms ease',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = '#FAFAFA';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'none';
-        }}
-      >
-        {/* Thumbnail */}
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.model_name}
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 6,
-              objectFit: 'cover',
-              flexShrink: 0,
-              background: '#F5F5F5',
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 6,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 24,
-              background: `${colorHex}22`,
-              color: colorHex,
-              fontWeight: 700,
-              fontFamily: kmsFont,
-            }}
-          >
-            {product.brand_name.charAt(0).toUpperCase()}
-          </div>
-        )}
-
-        {/* Info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: kmsColors.black,
-              lineHeight: 1.3,
-              marginBottom: 2,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {product.brand_name} {product.model_name}
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: '#888888',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                border: '1px solid rgba(0,0,0,0.1)',
-                background: colorHex,
-                flexShrink: 0,
-              }}
-            />
-            {product.color}
-          </div>
-          {product.price_from_cents != null && (
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#444444',
-                marginTop: 6,
-                fontFamily: kmsFont,
-              }}
-            >
-              vanaf {formatPrice(product.price_from_cents)}
-            </div>
-          )}
-        </div>
-
-        {/* Right side: badge + chevron */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: 8,
-            flexShrink: 0,
-          }}
-        >
-          {hasSelection && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                background: kmsColors.orange,
-                color: kmsColors.white,
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '3px 10px',
-                borderRadius: 999,
-                fontFamily: kmsFont,
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {selectedQuantity}x
-            </div>
-          )}
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#AAAAAA"
-            strokeWidth="2"
-            style={{
-              transition: 'transform 250ms ease',
-              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            }}
-          >
-            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Expanded body */}
+    <>
+      <style>{`
+        @keyframes kms-spring-in {
+          0% { opacity: 0; transform: scale(0.95) translateY(8px); }
+          60% { transform: scale(1.02) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
       <div
         style={{
-          maxHeight: isExpanded ? 500 : 0,
+          background: kmsColors.surface,
+          borderRadius: 18,
+          border: `1.5px solid ${hasSelection ? kmsColors.borderSelected : kmsColors.border}`,
+          boxShadow: hasSelection
+            ? `0 0 0 3px rgba(241,142,0,0.08), 0 1px 3px rgba(0,0,0,0.2)`
+            : '0 1px 3px rgba(0,0,0,0.2)',
           overflow: 'hidden',
-          transition: 'max-height 300ms ease-out',
+          transition: 'border-color 150ms ease, box-shadow 150ms ease',
+          animation: `kms-spring-in 500ms cubic-bezier(0.34, 1.56, 0.64, 1) ${(index ?? 0) * 80}ms both`,
         }}
       >
-        <div
+        {/* Card header — tap to expand */}
+        <button
+          onClick={onToggle}
           style={{
-            padding: '0 16px 16px',
-            borderTop: '1px solid #F0F0F0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            padding: '14px 16px',
+            cursor: 'pointer',
+            userSelect: 'none',
+            background: 'none',
+            border: 'none',
+            width: '100%',
+            textAlign: 'left',
+            fontFamily: kmsFont,
+            transition: 'background 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = kmsColors.surfaceHover;
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'none';
           }}
         >
-          <SizeSelector
-            variants={product.variants}
-            cart={cart}
-            onQuantityChange={onQuantityChange}
-            onDetailClick={onDetailClick}
-          />
+          {/* Thumbnail */}
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.model_name}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 6,
+                objectFit: 'cover',
+                flexShrink: 0,
+                background: kmsColors.surfaceHover,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 6,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 24,
+                background: `${colorHex}22`,
+                color: colorHex,
+                fontWeight: 700,
+                fontFamily: kmsFont,
+              }}
+            >
+              {product.brand_name.charAt(0).toUpperCase()}
+            </div>
+          )}
+
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: kmsColors.text,
+                lineHeight: 1.3,
+                marginBottom: 2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {product.brand_name} {product.model_name}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: kmsColors.textMuted,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  background: colorHex,
+                  flexShrink: 0,
+                }}
+              />
+              {product.color}
+            </div>
+            {product.price_from_cents != null && (
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: kmsColors.textSecondary,
+                  marginTop: 6,
+                  fontFamily: kmsFont,
+                }}
+              >
+                vanaf {formatPrice(product.price_from_cents)}
+              </div>
+            )}
+          </div>
+
+          {/* Right side: badge + chevron */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 8,
+              flexShrink: 0,
+            }}
+          >
+            {hasSelection && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: kmsColors.orange,
+                  color: kmsColors.white,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  fontFamily: kmsFont,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {selectedQuantity}x
+              </div>
+            )}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth="2"
+              style={{
+                transition: 'transform 250ms ease',
+                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+            >
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </button>
+
+        {/* Expanded body */}
+        <div
+          style={{
+            maxHeight: isExpanded ? 500 : 0,
+            overflow: 'hidden',
+            transition: 'max-height 300ms ease-out',
+          }}
+        >
+          <div
+            style={{
+              padding: '0 16px 16px',
+              borderTop: `1px solid ${kmsColors.border}`,
+            }}
+          >
+            <SizeSelector
+              variants={product.variants}
+              cart={cart}
+              onQuantityChange={onQuantityChange}
+              onDetailClick={onDetailClick}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

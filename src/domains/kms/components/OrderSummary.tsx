@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { useState, useEffect, useContext } from 'react';
+import { kmsColors, kmsFont, kmsApiBase } from '../lib/kms-theme';
+import { kmsAuthFetch } from '../lib/kms-auth-fetch';
 import type { CartState, KmsOrderResponse } from '../types';
-import { API_BASE } from '@/lib/api';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 
 interface OrderSummaryProps {
   cart: CartState;
   isOpen: boolean;
   onClose: () => void;
   onOrderPlaced: (order: KmsOrderResponse) => void;
-  authHeader: Record<string, string>;
 }
 
 function formatPrice(cents: number): string {
@@ -22,8 +22,8 @@ export function OrderSummary({
   isOpen,
   onClose,
   onOrderPlaced,
-  authHeader,
 }: OrderSummaryProps) {
+  const { t } = useContext(BolusModeContext);
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -65,11 +65,10 @@ export function OrderSummary({
         notes: notes.trim() || undefined,
       };
 
-      const res = await fetch(`${API_BASE}/api/v1/kms/orders`, {
+      const res = await kmsAuthFetch(`${kmsApiBase}/api/v1/kms/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authHeader,
         },
         body: JSON.stringify(body),
       });
@@ -87,7 +86,7 @@ export function OrderSummary({
       onOrderPlaced(order);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Er ging iets mis. Probeer het opnieuw.',
+        err instanceof Error ? err.message : t('order.error_title'),
       );
     } finally {
       setSubmitting(false);
@@ -133,9 +132,9 @@ export function OrderSummary({
           left: 0,
           right: 0,
           zIndex: 400,
-          background: kmsColors.white,
+          background: kmsColors.bg,
           borderRadius: '20px 20px 0 0',
-          boxShadow: '0 -20px 60px rgba(0,0,0,0.2)',
+          boxShadow: '0 -20px 60px rgba(0,0,0,0.5)',
           maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
@@ -158,7 +157,7 @@ export function OrderSummary({
               width: 36,
               height: 4,
               borderRadius: 2,
-              background: '#DDDDDD',
+              background: 'rgba(255,255,255,0.12)',
             }}
           />
         </div>
@@ -170,7 +169,7 @@ export function OrderSummary({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '8px 20px 16px',
-            borderBottom: '1px solid #F0F0F0',
+            borderBottom: `1px solid ${kmsColors.border}`,
             flexShrink: 0,
           }}
         >
@@ -178,12 +177,12 @@ export function OrderSummary({
             style={{
               fontSize: 18,
               fontWeight: 700,
-              color: kmsColors.black,
+              color: kmsColors.text,
               fontFamily: kmsFont,
               margin: 0,
             }}
           >
-            Bestelling bevestigen
+            {t('summary.title')}
           </h2>
           <button
             onClick={onClose}
@@ -191,16 +190,16 @@ export function OrderSummary({
               width: 32,
               height: 32,
               borderRadius: '50%',
-              background: '#F5F5F5',
+              background: kmsColors.surfaceHover,
               border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#666',
+              color: 'rgba(255,255,255,0.5)',
               flexShrink: 0,
             }}
-            aria-label="Sluiten"
+            aria-label={t('summary.close')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -228,7 +227,7 @@ export function OrderSummary({
                   justifyContent: 'space-between',
                   gap: 12,
                   padding: '12px 0',
-                  borderBottom: '1px solid #F5F5F5',
+                  borderBottom: `1px solid ${kmsColors.border}`,
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -236,7 +235,7 @@ export function OrderSummary({
                     style={{
                       fontSize: 14,
                       fontWeight: 600,
-                      color: kmsColors.black,
+                      color: kmsColors.text,
                       fontFamily: kmsFont,
                       marginBottom: 2,
                     }}
@@ -246,7 +245,7 @@ export function OrderSummary({
                   <div
                     style={{
                       fontSize: 12,
-                      color: '#888888',
+                      color: kmsColors.textMuted,
                       fontFamily: kmsFont,
                       display: 'flex',
                       alignItems: 'center',
@@ -263,21 +262,21 @@ export function OrderSummary({
                         flexShrink: 0,
                       }}
                     />
-                    {item.color} &middot; Maat {item.size}
+                    {item.color} &middot; {t('summary.size')} {item.size}
                   </div>
                 </div>
                 <div
                   style={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: kmsColors.black,
+                    color: kmsColors.text,
                     fontFamily: kmsFont,
                     whiteSpace: 'nowrap',
                     textAlign: 'right',
                     flexShrink: 0,
                   }}
                 >
-                  <span style={{ color: '#888', fontWeight: 400 }}>{item.quantity}&times; </span>
+                  <span style={{ color: kmsColors.textMuted, fontWeight: 400 }}>{item.quantity}&times; </span>
                   {formatPrice(item.priceCents)}
                 </div>
               </div>
@@ -287,7 +286,7 @@ export function OrderSummary({
           {/* Total */}
           <div
             style={{
-              background: '#FFF4E0',
+              background: 'rgba(241,142,0,0.08)',
               borderRadius: 12,
               padding: '14px 16px',
               display: 'flex',
@@ -300,11 +299,11 @@ export function OrderSummary({
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: kmsColors.black,
+                color: kmsColors.text,
                 fontFamily: kmsFont,
               }}
             >
-              Totaalbedrag
+              {t('summary.total')}
             </span>
             <span
               style={{
@@ -325,40 +324,40 @@ export function OrderSummary({
                 display: 'block',
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#444',
+                color: kmsColors.textSecondary,
                 marginBottom: 6,
                 fontFamily: kmsFont,
               }}
             >
-              Referentie (optioneel)
+              {t('summary.reference_label')}
             </label>
             <input
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               maxLength={255}
-              placeholder="Bijv. afdeling, projectnummer..."
+              placeholder={t('summary.reference_placeholder')}
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                border: '1.5px solid #E8E8E8',
+                border: `1.5px solid ${kmsColors.border}`,
                 borderRadius: 12,
                 fontSize: 14,
                 fontFamily: kmsFont,
-                background: '#FAFAFA',
-                color: kmsColors.black,
+                background: kmsColors.surface,
+                color: kmsColors.text,
                 outline: 'none',
-                transition: 'border-color 150ms ease, box-shadow 150ms ease',
+                transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = kmsColors.cyan;
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,160,200,0.12)';
-                e.currentTarget.style.background = kmsColors.white;
+                e.currentTarget.style.background = kmsColors.surfaceHover;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#E8E8E8';
+                e.currentTarget.style.borderColor = kmsColors.border;
                 e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.background = '#FAFAFA';
+                e.currentTarget.style.background = kmsColors.surface;
               }}
             />
           </div>
@@ -370,40 +369,40 @@ export function OrderSummary({
                 display: 'block',
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#444',
+                color: kmsColors.textSecondary,
                 marginBottom: 6,
                 fontFamily: kmsFont,
               }}
             >
-              Opmerkingen (optioneel)
+              {t('summary.notes_label')}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Eventuele opmerkingen bij uw bestelling..."
+              placeholder={t('summary.notes_placeholder')}
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                border: '1.5px solid #E8E8E8',
+                border: `1.5px solid ${kmsColors.border}`,
                 borderRadius: 12,
                 fontSize: 14,
                 fontFamily: kmsFont,
-                background: '#FAFAFA',
-                color: kmsColors.black,
+                background: kmsColors.surface,
+                color: kmsColors.text,
                 outline: 'none',
                 resize: 'vertical',
-                transition: 'border-color 150ms ease, box-shadow 150ms ease',
+                transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = kmsColors.cyan;
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,160,200,0.12)';
-                e.currentTarget.style.background = kmsColors.white;
+                e.currentTarget.style.background = kmsColors.surfaceHover;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#E8E8E8';
+                e.currentTarget.style.borderColor = kmsColors.border;
                 e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.background = '#FAFAFA';
+                e.currentTarget.style.background = kmsColors.surface;
               }}
             />
           </div>
@@ -413,11 +412,11 @@ export function OrderSummary({
             <div
               style={{
                 padding: '12px 14px',
-                background: '#FFF0F0',
-                border: '1px solid #FFD0D0',
+                background: kmsColors.errorBg,
+                border: `1px solid rgba(220,38,38,0.2)`,
                 borderRadius: 10,
                 fontSize: 13,
-                color: '#C0392B',
+                color: kmsColors.error,
                 fontFamily: kmsFont,
                 marginBottom: 16,
               }}
@@ -431,7 +430,7 @@ export function OrderSummary({
         <div
           style={{
             padding: '16px 20px 24px',
-            borderTop: '1px solid #F0F0F0',
+            borderTop: `1px solid ${kmsColors.border}`,
             flexShrink: 0,
           }}
         >
@@ -441,8 +440,8 @@ export function OrderSummary({
             style={{
               width: '100%',
               padding: '16px 20px',
-              background: submitting ? '#CCA060' : kmsColors.orange,
-              color: kmsColors.white,
+              background: submitting ? 'rgba(255,255,255,0.15)' : kmsColors.orange,
+              color: '#FFFFFF',
               border: 'none',
               borderRadius: 14,
               fontSize: 16,
@@ -459,7 +458,7 @@ export function OrderSummary({
             }}
             onMouseEnter={(e) => {
               if (submitting) return;
-              (e.currentTarget as HTMLButtonElement).style.background = '#D97E00';
+              (e.currentTarget as HTMLButtonElement).style.background = kmsColors.orangeHover;
               (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
@@ -484,14 +483,14 @@ export function OrderSummary({
                   <circle cx="12" cy="12" r="10" opacity="0.25" />
                   <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                 </svg>
-                Even geduld...
+                {t('summary.submitting')}
               </>
             ) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Bestelling plaatsen
+                {t('summary.submit')}
               </>
             )}
           </button>
@@ -506,7 +505,7 @@ export function OrderSummary({
               border: 'none',
               fontSize: 14,
               fontWeight: 500,
-              color: '#888888',
+              color: kmsColors.textMuted,
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontFamily: kmsFont,
               textAlign: 'center',
@@ -514,7 +513,7 @@ export function OrderSummary({
               textUnderlineOffset: '2px',
             }}
           >
-            Annuleren, ga terug
+            {t('summary.cancel')}
           </button>
         </div>
       </div>

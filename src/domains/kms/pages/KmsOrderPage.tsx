@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
 import { useCart } from '../hooks/useCart';
@@ -7,18 +7,20 @@ import { ProductCard } from '../components/ProductCard';
 import { CartBar } from '../components/CartBar';
 import { ProductDetail } from '../components/ProductDetail';
 import { OrderSummary } from '../components/OrderSummary';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal, kmsApiBase } from '../lib/kms-theme';
+import { kmsAuthFetch } from '../lib/kms-auth-fetch';
+import { BolusModeContext } from '../lib/kms-bolus-context';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 import type { KmsPortalProduct, KmsPortalProductList, KmsOrderResponse } from '../types';
-import { API_BASE } from '@/lib/api';
 
 // Skeleton loader for a single product card
 function CardSkeleton() {
   return (
     <div
       style={{
-        background: kmsColors.white,
+        background: kmsColors.surface,
         borderRadius: 18,
-        border: '1.5px solid transparent',
+        border: `1.5px solid ${kmsColors.border}`,
         boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
         overflow: 'hidden',
         padding: '14px 16px',
@@ -32,7 +34,7 @@ function CardSkeleton() {
           width: 64,
           height: 64,
           borderRadius: 6,
-          background: '#F0F0F0',
+          background: kmsColors.surfaceHover,
           flexShrink: 0,
           animation: 'kms-shimmer 1.4s ease-in-out infinite',
         }}
@@ -42,7 +44,7 @@ function CardSkeleton() {
           style={{
             height: 14,
             borderRadius: 6,
-            background: '#F0F0F0',
+            background: kmsColors.surfaceHover,
             width: '65%',
             animation: 'kms-shimmer 1.4s ease-in-out infinite',
           }}
@@ -51,7 +53,7 @@ function CardSkeleton() {
           style={{
             height: 12,
             borderRadius: 6,
-            background: '#F0F0F0',
+            background: kmsColors.surfaceHover,
             width: '40%',
             animation: 'kms-shimmer 1.4s ease-in-out infinite 0.1s',
           }}
@@ -60,7 +62,7 @@ function CardSkeleton() {
           style={{
             height: 12,
             borderRadius: 6,
-            background: '#F0F0F0',
+            background: kmsColors.surfaceHover,
             width: '30%',
             animation: 'kms-shimmer 1.4s ease-in-out infinite 0.2s',
           }}
@@ -71,15 +73,19 @@ function CardSkeleton() {
 }
 
 export default function KmsOrderPage() {
+  const { slug: urlSlug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { customerName, isAuthenticated, authHeader } = useKmsAuth();
+  const { customerName, isAuthenticated, customerSlug } = useKmsAuth();
+  const slug = urlSlug || customerSlug || KMS_DEFAULT_SLUG;
+  const { t } = useContext(BolusModeContext);
+  const { canInstall, promptInstall, isIos, dismiss: dismissPwa } = usePwaInstall();
 
   // Redirect to auth if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(isKmsPortal ? '/' : `/kms/${slug}`, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, slug]);
 
   const [products, setProducts] = useState<KmsPortalProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,19 +95,18 @@ export default function KmsOrderPage() {
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { cart, addItem, setQuantity, clearCart } = useCart();
+  const { cart, setQuantity, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
   async function fetchProducts() {
+    if (!slug) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/kms/products`, {
-        headers: authHeader,
-      });
+      const res = await kmsAuthFetch(`${kmsApiBase}/api/v1/kms/products`);
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          navigate('/', { replace: true });
+          navigate(isKmsPortal ? '/' : `/kms/${slug}`, { replace: true });
           return;
         }
         throw new Error(`HTTP ${res.status}`);
@@ -109,7 +114,7 @@ export default function KmsOrderPage() {
       const data: KmsPortalProductList = await res.json();
       setProducts(data.products ?? []);
     } catch {
-      setError('Er ging iets mis bij het laden van de producten.');
+      setError(t('order.error_loading'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +125,7 @@ export default function KmsOrderPage() {
       void fetchProducts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [slug, isAuthenticated]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -152,7 +157,7 @@ export default function KmsOrderPage() {
 
   function handleOrderPlaced(order: KmsOrderResponse) {
     clearCart();
-    navigate('/bevestiging', {
+    navigate(isKmsPortal ? '/bevestiging' : `/kms/${slug}/bevestiging`, {
       state: { order },
     });
   }
@@ -175,11 +180,11 @@ export default function KmsOrderPage() {
         <div
           style={{
             position: 'sticky',
-            top: 64,
+            top: 59,
             zIndex: 40,
-            background: kmsColors.white,
+            background: kmsColors.bg,
             padding: '12px 0 16px',
-            borderBottom: '1px solid #F0F0F0',
+            borderBottom: `1px solid ${kmsColors.border}`,
             marginBottom: 16,
           }}
         >
@@ -192,7 +197,7 @@ export default function KmsOrderPage() {
                 top: '50%',
                 transform: 'translateY(-50%)',
                 pointerEvents: 'none',
-                color: '#AAAAAA',
+                color: kmsColors.textFaint,
               }}
               width="16"
               height="16"
@@ -207,7 +212,7 @@ export default function KmsOrderPage() {
 
             <input
               type="text"
-              placeholder="Zoek op merk, model of kleur..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -216,23 +221,23 @@ export default function KmsOrderPage() {
               style={{
                 width: '100%',
                 padding: '14px 44px 14px 48px',
-                border: '1.5px solid #E8E8E8',
+                border: `1.5px solid ${kmsColors.border}`,
                 borderRadius: 24,
                 fontSize: 15,
                 fontFamily: kmsFont,
-                background: '#FAFAFA',
+                background: kmsColors.surface,
                 outline: 'none',
-                color: kmsColors.black,
+                color: kmsColors.text,
                 transition: 'all 150ms ease',
               }}
               onFocus={(e) => {
-                e.currentTarget.style.background = kmsColors.white;
-                e.currentTarget.style.borderColor = kmsColors.cyan;
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,160,200,0.12)';
+                e.currentTarget.style.background = kmsColors.surface;
+                e.currentTarget.style.borderColor = kmsColors.borderHover;
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.04)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.background = '#FAFAFA';
-                e.currentTarget.style.borderColor = '#E8E8E8';
+                e.currentTarget.style.background = kmsColors.surface;
+                e.currentTarget.style.borderColor = kmsColors.border;
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -246,7 +251,7 @@ export default function KmsOrderPage() {
                   right: 14,
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: '#CCCCCC',
+                  background: kmsColors.surfaceHover,
                   border: 'none',
                   borderRadius: '50%',
                   width: 22,
@@ -255,11 +260,11 @@ export default function KmsOrderPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#444',
+                  color: kmsColors.textSecondary,
                   fontSize: 12,
                   fontFamily: kmsFont,
                 }}
-                aria-label="Zoekopdracht wissen"
+                aria-label={t('order.clear_search')}
               >
                 ×
               </button>
@@ -267,12 +272,74 @@ export default function KmsOrderPage() {
           </div>
         </div>
 
+        {/* Subtiele PWA install hint */}
+        {canInstall && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              background: kmsColors.surface,
+              borderRadius: 10,
+              marginBottom: 12,
+              fontFamily: kmsFont,
+              fontSize: 13,
+              color: kmsColors.textSecondary,
+              border: `1px solid ${kmsColors.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={kmsColors.cyan} strokeWidth="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+              <span>{isIos ? 'Voeg toe aan uw startscherm via Delen-icoon' : 'Voeg portaal toe aan startscherm'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {!isIos && (
+                <button
+                  onClick={() => void promptInstall()}
+                  style={{
+                    padding: '4px 12px',
+                    background: kmsColors.cyan,
+                    color: '#FFF',
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: kmsFont,
+                  }}
+                >
+                  Toevoegen
+                </button>
+              )}
+              <button
+                onClick={dismissPwa}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  color: kmsColors.textMuted,
+                  fontSize: 16,
+                  lineHeight: 1,
+                }}
+                aria-label="Sluiten"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Section label */}
         <div
           style={{
             fontSize: 12,
             fontWeight: 600,
-            color: '#888888',
+            color: kmsColors.textMuted,
             letterSpacing: '0.8px',
             textTransform: 'uppercase',
             padding: '4px 0',
@@ -280,7 +347,7 @@ export default function KmsOrderPage() {
             fontFamily: kmsFont,
           }}
         >
-          Uw assortiment
+          {t('products.title')}
         </div>
 
         {/* Loading skeletons */}
@@ -310,7 +377,7 @@ export default function KmsOrderPage() {
                 width: 56,
                 height: 56,
                 borderRadius: '50%',
-                background: '#FFF0F0',
+                background: kmsColors.errorBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -321,7 +388,7 @@ export default function KmsOrderPage() {
                 height="24"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#C0392B"
+                stroke={kmsColors.error}
                 strokeWidth="2"
               >
                 <circle cx="12" cy="12" r="10" />
@@ -334,14 +401,14 @@ export default function KmsOrderPage() {
                 style={{
                   fontSize: 16,
                   fontWeight: 700,
-                  color: kmsColors.black,
+                  color: kmsColors.text,
                   marginBottom: 4,
                   fontFamily: kmsFont,
                 }}
               >
-                Er ging iets mis
+                {t('order.error_title')}
               </div>
-              <div style={{ fontSize: 14, color: '#888', fontFamily: kmsFont }}>
+              <div style={{ fontSize: 14, color: kmsColors.textMuted, fontFamily: kmsFont }}>
                 {error}
               </div>
             </div>
@@ -350,7 +417,7 @@ export default function KmsOrderPage() {
               style={{
                 padding: '12px 24px',
                 background: kmsColors.orange,
-                color: kmsColors.white,
+                color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 12,
                 fontSize: 14,
@@ -359,7 +426,7 @@ export default function KmsOrderPage() {
                 fontFamily: kmsFont,
               }}
             >
-              Opnieuw proberen
+              {t('order.retry')}
             </button>
           </div>
         )}
@@ -384,17 +451,17 @@ export default function KmsOrderPage() {
               style={{
                 fontSize: 16,
                 fontWeight: 600,
-                color: kmsColors.black,
+                color: kmsColors.text,
                 marginBottom: 4,
                 fontFamily: kmsFont,
               }}
             >
-              {searchQuery ? 'Geen producten gevonden' : 'Geen producten beschikbaar'}
+              {searchQuery ? t('order.no_results') : t('order.no_products')}
             </div>
-            <div style={{ fontSize: 14, color: '#888', fontFamily: kmsFont }}>
+            <div style={{ fontSize: 14, color: kmsColors.textMuted, fontFamily: kmsFont }}>
               {searchQuery
-                ? `Geen resultaten voor "${searchQuery}"`
-                : 'Er zijn nog geen producten toegewezen aan uw assortiment.'}
+                ? `${t('order.no_results_for')} "${searchQuery}"`
+                : t('order.no_products_assigned')}
             </div>
             {searchQuery && (
               <button
@@ -412,7 +479,7 @@ export default function KmsOrderPage() {
                   fontFamily: kmsFont,
                 }}
               >
-                Zoekfilter verwijderen
+                {t('order.clear_filter')}
               </button>
             )}
           </div>
@@ -435,27 +502,20 @@ export default function KmsOrderPage() {
                 <ProductCard
                   key={key}
                   product={product}
+                  index={index}
                   isExpanded={expandedIndex === index}
                   onToggle={() => handleToggle(index)}
                   onDetailClick={() => handleOpenDetail(product)}
                   cart={cart}
                   onQuantityChange={(variantId, quantity) => {
-                    const existing = cart.items.find(i => i.variantId === variantId);
-                    if (!existing && quantity > 0) {
-                      const variant = product.variants.find(v => v.id === variantId);
-                      if (variant) {
-                        addItem({
-                          variantId: variant.id,
-                          modelName: product.model_name,
-                          color: product.color,
-                          size: variant.size,
-                          ean: variant.ean,
-                          priceCents: variant.price_cents ?? 0,
-                        });
-                      }
-                    } else {
-                      setQuantity(variantId, quantity);
-                    }
+                    const variant = product.variants.find(v => v.id === variantId);
+                    setQuantity(variantId, quantity, variant ? {
+                      modelName: `${product.brand_name} ${product.model_name}`,
+                      color: product.color,
+                      size: variant.size,
+                      ean: variant.ean ?? '',
+                      priceCents: variant.price_cents ?? 0,
+                    } : undefined);
                   }}
                 />
               );
@@ -465,7 +525,7 @@ export default function KmsOrderPage() {
       </KmsLayout>
 
       {/* Sticky cart bar */}
-      <CartBar cart={cart} onClick={handleCartClick} onClear={clearCart} />
+      <CartBar cart={cart} onClick={handleCartClick} />
 
       {/* Product detail panel */}
       <ProductDetail
@@ -480,7 +540,6 @@ export default function KmsOrderPage() {
         isOpen={showSummary}
         onClose={() => setShowSummary(false)}
         onOrderPlaced={handleOrderPlaced}
-        authHeader={authHeader}
       />
     </>
   );

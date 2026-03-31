@@ -8,14 +8,14 @@ export function KmsSpinner() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#fff',
+        background: kmsColors.bg,
       }}
     >
       <div
         style={{
           width: 40,
           height: 40,
-          border: `3px solid #F0F0F0`,
+          border: `3px solid ${kmsColors.border}`,
           borderTopColor: kmsColors.orange,
           borderRadius: '50%',
           animation: 'kms-spin 0.7s linear infinite',

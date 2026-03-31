@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useEffect, useRef, useContext } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { PasskeyPrompt } from '../components/PasskeyPrompt';
+import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
+import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 import type { KmsOrderResponse } from '../types';
 
 interface LocationState {
@@ -24,8 +27,8 @@ interface ConfettiParticle {
 
 const CONFETTI_COLORS = [
   kmsColors.orange,
-  '#00A0C8', // cyan
-  '#008838', // green
+  kmsColors.cyan,
+  kmsColors.green,
   '#F18E00', // orange variant
   '#00C8A0', // teal
   '#FFCC44', // yellow-gold
@@ -97,8 +100,11 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 }
 
 export default function KmsConfirmPage() {
+  const { slug: urlSlug } = useParams<{ slug: string }>();
   const location = useLocation();
-  const { customerName } = useKmsAuth();
+  const { customerName, customerSlug, token } = useKmsAuth();
+  const slug = urlSlug || customerSlug || KMS_DEFAULT_SLUG;
+  const { t } = useContext(BolusModeContext);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const state = location.state as LocationState | null;
@@ -169,7 +175,7 @@ export default function KmsConfirmPage() {
                 position: 'absolute',
                 inset: 0,
                 borderRadius: '50%',
-                background: '#E0F5EC',
+                background: kmsColors.successBg,
                 animation: 'kms-check-ring 1.2s ease-out 200ms forwards',
               }}
             />
@@ -178,7 +184,7 @@ export default function KmsConfirmPage() {
                 width: 80,
                 height: 80,
                 borderRadius: '50%',
-                background: '#E0F5EC',
+                background: kmsColors.successBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -204,13 +210,13 @@ export default function KmsConfirmPage() {
             style={{
               fontSize: 26,
               fontWeight: 800,
-              color: kmsColors.black,
+              color: kmsColors.text,
               fontFamily: kmsFont,
               margin: '0 0 12px',
               animation: 'kms-fade-up 400ms ease 300ms both',
             }}
           >
-            Bestelling geplaatst!
+            {t('success.title')}
           </h1>
 
           {/* Order number badge */}
@@ -220,7 +226,7 @@ export default function KmsConfirmPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 background: kmsColors.orange,
-                color: kmsColors.white,
+                color: '#FFFFFF',
                 borderRadius: 999,
                 padding: '6px 18px',
                 fontSize: 14,
@@ -230,7 +236,7 @@ export default function KmsConfirmPage() {
                 animation: 'kms-badge-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both',
               }}
             >
-              Ordernummer #{order.order_number}
+              {t('confirm.order_number')} #{order.order_number}
             </div>
           )}
 
@@ -238,7 +244,7 @@ export default function KmsConfirmPage() {
           <p
             style={{
               fontSize: 15,
-              color: '#666666',
+              color: kmsColors.textMuted,
               fontFamily: kmsFont,
               maxWidth: 360,
               lineHeight: 1.6,
@@ -246,15 +252,14 @@ export default function KmsConfirmPage() {
               animation: 'kms-fade-up 400ms ease 600ms both',
             }}
           >
-            U ontvangt een bevestiging per e-mail. Uw werkkleding wordt zo snel mogelijk
-            verwerkt.
+            {t('success.message')}
           </p>
 
           {/* Order total (if available) */}
           {order?.total_cents !== undefined && (
             <div
               style={{
-                background: '#F5F5F5',
+                background: kmsColors.surface,
                 borderRadius: 12,
                 padding: '12px 24px',
                 marginTop: 8,
@@ -262,17 +267,56 @@ export default function KmsConfirmPage() {
                 animation: 'kms-fade-up 400ms ease 700ms both',
               }}
             >
-              <span style={{ fontSize: 13, color: '#888', fontFamily: kmsFont }}>Totaal: </span>
+              <span style={{ fontSize: 13, color: kmsColors.textMuted, fontFamily: kmsFont }}>{t('confirm.total_label')} </span>
               <span
                 style={{
                   fontSize: 15,
                   fontWeight: 700,
-                  color: kmsColors.black,
+                  color: kmsColors.text,
                   fontFamily: kmsFont,
                 }}
               >
-                {formatPrice(order.total_cents)}
+                {formatPrice(order.total_amount_cents)}
               </span>
+            </div>
+          )}
+
+          {/* Gripp status */}
+          {order?.gripp_status && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: '10px 16px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontFamily: kmsFont,
+                animation: 'kms-fade-up 400ms ease 750ms both',
+                background: order.gripp_status === 'created'
+                  ? kmsColors.successBg
+                  : order.gripp_status === 'failed'
+                    ? kmsColors.errorBg
+                    : kmsColors.surface,
+                color: order.gripp_status === 'created'
+                  ? kmsColors.green
+                  : order.gripp_status === 'failed'
+                    ? kmsColors.error
+                    : kmsColors.textMuted,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              {order.gripp_status === 'created' && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              {order.gripp_status === 'failed' && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              )}
+              {order.gripp_status_detail}
             </div>
           )}
 
@@ -281,22 +325,34 @@ export default function KmsConfirmPage() {
             <div
               style={{
                 fontSize: 13,
-                color: '#888',
+                color: kmsColors.textMuted,
                 fontFamily: kmsFont,
                 marginTop: 4,
-                animation: 'kms-fade-up 400ms ease 750ms both',
+                animation: 'kms-fade-up 400ms ease 800ms both',
               }}
             >
-              Referentie: <strong style={{ color: '#444' }}>{order.reference}</strong>
+              {t('confirm.reference_label')} <strong style={{ color: kmsColors.textSecondary }}>{order.reference}</strong>
             </div>
           )}
+
+          {/* Passkey prompt */}
+          {token && (
+            <div style={{ width: '100%', maxWidth: 320 }}>
+              <PasskeyPrompt authToken={token} />
+            </div>
+          )}
+
+          {/* PWA install prompt */}
+          <div style={{ width: '100%', maxWidth: 320 }}>
+            <PwaInstallPrompt />
+          </div>
 
           {/* Divider */}
           <div
             style={{
               width: 48,
               height: 2,
-              background: '#F0F0F0',
+              background: kmsColors.border,
               borderRadius: 1,
               margin: '28px auto',
               animation: 'kms-fade-up 400ms ease 800ms both',
@@ -315,7 +371,7 @@ export default function KmsConfirmPage() {
             }}
           >
             <Link
-              to="/bestellen"
+              to={isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -323,7 +379,7 @@ export default function KmsConfirmPage() {
                 gap: 8,
                 padding: '14px 20px',
                 background: kmsColors.orange,
-                color: kmsColors.white,
+                color: '#FFFFFF',
                 borderRadius: 14,
                 fontSize: 15,
                 fontWeight: 700,
@@ -345,19 +401,19 @@ export default function KmsConfirmPage() {
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              Nieuwe bestelling
+              {t('success.new')}
             </Link>
 
             <Link
-              to="/bestellen"
+              to={isKmsPortal ? '/' : `/kms/${slug}`}
               style={{
                 padding: '12px 20px',
                 background: 'none',
-                border: `1.5px solid #E0E0E0`,
+                border: `1.5px solid ${kmsColors.border}`,
                 borderRadius: 14,
                 fontSize: 14,
                 fontWeight: 600,
-                color: '#666',
+                color: kmsColors.textMuted,
                 fontFamily: kmsFont,
                 textDecoration: 'none',
                 textAlign: 'center',
@@ -368,11 +424,11 @@ export default function KmsConfirmPage() {
                 (e.currentTarget as HTMLAnchorElement).style.color = kmsColors.cyan;
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.borderColor = '#E0E0E0';
-                (e.currentTarget as HTMLAnchorElement).style.color = '#666';
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = kmsColors.border;
+                (e.currentTarget as HTMLAnchorElement).style.color = kmsColors.textMuted;
               }}
             >
-              Terug naar bestelformulier
+              {t('confirm.back')}
             </Link>
           </div>
         </div>

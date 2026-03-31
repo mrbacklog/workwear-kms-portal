@@ -1,33 +1,37 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
-import { API_BASE } from '@/lib/api';
-
-function VkLogoLarge() {
-  return (
-    <img
-      src="/vk-logo-zwart.png"
-      alt="Van Kruiningen Reklame"
-      style={{ height: 60, width: 'auto', margin: '0 auto', display: 'block' }}
-    />
-  );
-}
+import { PasskeyLoginSection } from '../components/PasskeyLoginSection';
+import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, kmsApiBase, isKmsPortal } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
+import { useKmsAuth } from '../hooks/useKmsAuth';
+import type { KmsAuthResponse } from '../types';
 
 export default function KmsAuthPage() {
+  const { slug: urlSlug } = useParams<{ slug: string }>();
+  const slug = urlSlug || KMS_DEFAULT_SLUG;
+  const { t } = useContext(BolusModeContext);
+  const { login } = useKmsAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function handlePasskeySuccess(authResponse: KmsAuthResponse) {
+    login(authResponse);
+    navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!slug || !email.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/kms/auth/request`, {
+      const response = await fetch(`${kmsApiBase}/api/v1/kms/auth/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
@@ -48,34 +52,44 @@ export default function KmsAuthPage() {
 
   return (
     <KmsLayout>
-      <div style={{ textAlign: 'center', paddingTop: 32 }}>
-        <VkLogoLarge />
-
+      <div style={{
+        textAlign: 'center',
+        paddingTop: 32,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        maxWidth: 440,
+        margin: '0 auto',
+        width: '100%',
+      }}>
         <p
           style={{
             fontFamily: kmsFont,
             fontSize: 13,
             fontWeight: 500,
-            color: kmsColors.cyan,
-            marginTop: 16,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            color: kmsColors.textMuted,
+            marginTop: 0,
+            marginBottom: 4,
+            animation: 'kms-fade-up 400ms ease 200ms both',
           }}
         >
-          Van Kruiningen Reklame
+          {t('auth.welcome_prefix')}
         </p>
 
         <h1
           style={{
             fontFamily: kmsFont,
-            fontSize: 24,
-            fontWeight: 700,
-            color: kmsColors.black,
-            marginTop: 8,
-            lineHeight: 1.3,
+            fontSize: 26,
+            fontWeight: 800,
+            color: kmsColors.text,
+            marginTop: 0,
+            marginBottom: 0,
+            lineHeight: 1.2,
+            animation: 'kms-fade-up 400ms ease 350ms both',
           }}
         >
-          Welkom bij uw bestelportaal
+          {t('auth.welcome_title')}
         </h1>
 
         {!submitted ? (
@@ -84,16 +98,36 @@ export default function KmsAuthPage() {
               style={{
                 fontFamily: kmsFont,
                 fontSize: 15,
-                color: '#666666',
+                color: kmsColors.textMuted,
                 marginTop: 12,
                 marginBottom: 32,
                 lineHeight: 1.6,
+                animation: 'kms-fade-up 400ms ease 500ms both',
               }}
             >
-              Voer uw e-mailadres in en we sturen u een toegangslink.
+              {t('auth.description')}
             </p>
 
-            <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                textAlign: 'left',
+                maxWidth: 400,
+                margin: '0 auto',
+                animation: 'kms-fade-up 400ms ease 650ms both',
+              }}
+            >
+              <PasskeyLoginSection onSuccess={handlePasskeySuccess} />
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                textAlign: 'left',
+                maxWidth: 400,
+                margin: '0 auto',
+                animation: 'kms-fade-up 400ms ease 650ms both',
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label
                   htmlFor="email"
@@ -101,11 +135,11 @@ export default function KmsAuthPage() {
                     fontFamily: kmsFont,
                     fontSize: 13,
                     fontWeight: 600,
-                    color: '#444444',
+                    color: kmsColors.textSecondary,
                     letterSpacing: '0.3px',
                   }}
                 >
-                  E-mailadres
+                  {t('auth.email_label')}
                 </label>
                 <input
                   id="email"
@@ -117,22 +151,22 @@ export default function KmsAuthPage() {
                   disabled={loading}
                   style={{
                     padding: '14px 16px',
-                    border: `1.5px solid ${error ? '#DC2626' : '#CCCCCC'}`,
+                    border: `1.5px solid ${error ? kmsColors.error : kmsColors.border}`,
                     borderRadius: 12,
                     fontSize: 15,
                     fontFamily: kmsFont,
-                    color: kmsColors.black,
-                    background: kmsColors.white,
+                    color: kmsColors.text,
+                    background: kmsColors.surface,
                     outline: 'none',
                     width: '100%',
                     transition: 'border-color 150ms ease, box-shadow 150ms ease',
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = kmsColors.cyan;
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,160,200,0.15)';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,160,200,0.12)';
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = error ? '#DC2626' : '#CCCCCC';
+                    e.currentTarget.style.borderColor = error ? kmsColors.error : kmsColors.border;
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
@@ -143,7 +177,7 @@ export default function KmsAuthPage() {
                   style={{
                     fontFamily: kmsFont,
                     fontSize: 13,
-                    color: '#DC2626',
+                    color: kmsColors.error,
                     marginTop: 8,
                   }}
                 >
@@ -166,8 +200,8 @@ export default function KmsAuthPage() {
                   fontSize: 15,
                   fontWeight: 600,
                   fontFamily: kmsFont,
-                  background: loading || !email.trim() ? '#CCCCCC' : kmsColors.orange,
-                  color: kmsColors.white,
+                  background: loading || !email.trim() ? 'rgba(255,255,255,0.12)' : kmsColors.orange,
+                  color: '#FFFFFF',
                   border: 'none',
                   cursor: loading || !email.trim() ? 'not-allowed' : 'pointer',
                   boxShadow: loading || !email.trim() ? 'none' : '0 4px 12px rgba(241,142,0,0.35)',
@@ -181,16 +215,16 @@ export default function KmsAuthPage() {
                         width: 16,
                         height: 16,
                         border: '2px solid rgba(255,255,255,0.4)',
-                        borderTopColor: kmsColors.white,
+                        borderTopColor: '#FFFFFF',
                         borderRadius: '50%',
                         display: 'inline-block',
                         animation: 'kms-spin 0.7s linear infinite',
                       }}
                     />
-                    Versturen...
+                    {t('auth.submitting')}
                   </>
                 ) : (
-                  'Verstuur link'
+                  t('auth.submit')
                 )}
               </button>
             </form>
@@ -200,9 +234,11 @@ export default function KmsAuthPage() {
             style={{
               marginTop: 32,
               padding: '24px 20px',
-              background: '#E0F5EC',
+              background: kmsColors.successBg,
               borderRadius: 12,
               textAlign: 'left',
+              maxWidth: 400,
+              margin: '32px auto 0',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -227,22 +263,26 @@ export default function KmsAuthPage() {
                 style={{
                   fontFamily: kmsFont,
                   fontSize: 15,
-                  color: '#00542B',
+                  color: kmsColors.text,
                   fontWeight: 500,
                   lineHeight: 1.5,
                 }}
               >
-                Check uw inbox — u ontvangt binnen enkele minuten een link.
+                {t('auth.success')}
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Spinner keyframes */}
+      {/* Keyframes */}
       <style>{`
         @keyframes kms-spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes kms-fade-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </KmsLayout>

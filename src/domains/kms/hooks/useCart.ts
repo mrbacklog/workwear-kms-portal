@@ -21,7 +21,7 @@ interface UseCartReturn {
   cart: CartState;
   addItem: (params: AddItemParams) => void;
   removeItem: (variantId: string) => void;
-  setQuantity: (variantId: string, quantity: number) => void;
+  setQuantity: (variantId: string, quantity: number, meta?: Omit<AddItemParams, 'variantId'>) => void;
   clearCart: () => void;
   getQuantityForVariant: (variantId: string) => number;
 }
@@ -67,14 +67,22 @@ export function useCart(): UseCartReturn {
     });
   }, []);
 
-  const setQuantity = useCallback((variantId: string, quantity: number) => {
+  const setQuantity = useCallback((variantId: string, quantity: number, meta?: Omit<AddItemParams, 'variantId'>) => {
     setItems((prev) => {
       if (quantity <= 0) {
         return prev.filter((item) => item.variantId !== variantId);
       }
-      return prev.map((item) =>
-        item.variantId === variantId ? { ...item, quantity } : item,
-      );
+      const existing = prev.find((item) => item.variantId === variantId);
+      if (existing) {
+        return prev.map((item) =>
+          item.variantId === variantId ? { ...item, quantity } : item,
+        );
+      }
+      // Item not in cart yet — add it with provided metadata
+      if (meta) {
+        return [...prev, { variantId, quantity, ...meta }];
+      }
+      return prev;
     });
   }, []);
 

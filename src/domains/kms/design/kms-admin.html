@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMS Beheer — Workwear Platform</title>
+<style>
+:root {
+  --primary: #00A0C8;
+  --primary-dark: #0082A4;
+  --primary-light: #E0F5FA;
+  --accent: #F18E00;
+  --accent-dark: #D47A00;
+  --accent-light: #FEF3E0;
+  --success: #008838;
+  --success-light: #E0F5E8;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --bg: #F9FAFB;
+  --card: #FFFFFF;
+  --border: #E5E7EB;
+  --border-dark: #D1D5DB;
+  --text: #111827;
+  --text-muted: #6B7280;
+  --text-light: #9CA3AF;
+  --sidebar-w: 240px;
+  --header-h: 56px;
+  --radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===== LAYOUT ===== */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  background: #1A2332;
+  color: #CBD5E1;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 50;
+  transition: transform 0.25s ease;
+}
+
+.sidebar-brand {
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-brand-icon {
+  width: 32px; height: 32px;
+  background: var(--primary);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: white; font-size: 13px;
+}
+
+.sidebar-brand-text { font-weight: 600; color: white; font-size: 14px; }
+.sidebar-brand-sub { font-size: 11px; color: #64748B; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 8px; }
+
+.sidebar-section-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #475569;
+  padding: 8px 10px 4px;
+}
+
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px;
+  cursor: pointer; transition: all 0.15s;
+  color: #94A3B8; font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 1px;
+}
+
+.sidebar-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.sidebar-item.active { background: rgba(0,160,200,0.2); color: #67D8F0; }
+.sidebar-item.active svg { color: #67D8F0; }
+
+.sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sidebar-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: white; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+}
+
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  height: var(--header-h); background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+  position: sticky; top: 0; z-index: 30;
+}
+
+.topbar-title { font-weight: 600; font-size: 15px; }
+.topbar-breadcrumb { color: var(--text-muted); font-size: 13px; }
+.topbar-breadcrumb span { margin: 0 6px; }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.content { padding: 24px; flex: 1; }
+
+/* ===== SCREENS ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: none; transition: all 0.15s; text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-accent { background: var(--accent); color: white; }
+.btn-accent:hover { background: var(--accent-dark); }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #006A2B; }
+.btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border-dark); }
+.btn-outline:hover { background: var(--bg); border-color: var(--text-muted); }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: #B91C1C; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-lg { padding: 10px 20px; font-size: 14px; }
+.btn-icon { padding: 6px; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.card-title { font-weight: 600; font-size: 14px; }
+.card-body { padding: 20px; }
+
+/* ===== STAT CARDS ===== */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+
+.stat-value {
+  font-size: 26px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.stat-badge {
+  font-size: 11px; font-weight: 700; background: var(--accent);
+  color: white; padding: 2px 7px; border-radius: 10px;
+}
+
+.stat-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left; padding: 9px 12px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: #FAFAFA;
+  white-space: nowrap;
+}
+
+td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F9FAFB; }
+
+.td-actions { display: flex; gap: 4px; align-items: center; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+
+.badge-new { background: var(--accent-light); color: var(--accent-dark); }
+.badge-processing { background: var(--primary-light); color: var(--primary-dark); }
+.badge-done { background: var(--success-light); color: var(--success); }
+.badge-active { background: var(--success-light); color: var(--success); }
+.badge-inactive { background: #F3F4F6; color: var(--text-muted); }
+.badge-dot::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor; display: inline-block;
+}
+
+/* ===== FORM ELEMENTS ===== */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.input, .select, .textarea {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border-dark); border-radius: var(--radius);
+  font-size: 13px; color: var(--text); background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none; font-family: inherit;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0,160,200,0.1);
+}
+
+.input-search {
+  padding-left: 34px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+
+.input-group { display: flex; gap: 8px; }
+.input-group .input { flex: 1; }
+
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab {
+  padding: 10px 16px; font-size: 13px; font-weight: 500;
+  color: var(--text-muted); cursor: pointer; border: none;
+  background: transparent; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== GRID LAYOUTS ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.split-view { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 180px); }
+.split-pane { display: flex; flex-direction: column; overflow: hidden; }
+.split-pane-body { flex: 1; overflow-y: auto; padding: 12px; }
+
+/* ===== AUTOCOMPLETE ===== */
+.autocomplete-wrap { position: relative; }
+.autocomplete-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: white; border: 1px solid var(--border-dark);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  max-height: 260px; overflow-y: auto;
+  animation: fadeIn 0.15s ease;
+  display: none;
+}
+.autocomplete-dropdown.open { display: block; }
+.autocomplete-item {
+  padding: 10px 14px; cursor: pointer;
+  transition: background 0.1s;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.autocomplete-item:hover { background: var(--bg); }
+.autocomplete-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+.autocomplete-item-name { font-weight: 500; font-size: 13px; }
+.autocomplete-item-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ===== WIZARD ===== */
+.wizard-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.wizard-step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 500;
+}
+.wizard-step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  background: var(--border); color: var(--text-muted);
+  flex-shrink: 0;
+}
+.wizard-step.active .wizard-step-num { background: var(--primary); color: white; }
+.wizard-step.done .wizard-step-num { background: var(--success); color: white; }
+.wizard-step-label { color: var(--text-muted); }
+.wizard-step.active .wizard-step-label { color: var(--text); font-weight: 600; }
+.wizard-step.done .wizard-step-label { color: var(--success); }
+.wizard-step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; min-width: 40px; }
+.wizard-step-line.done { background: var(--success); }
+
+.wizard-panel { display: none; }
+.wizard-panel.active { display: block; }
+.wizard-footer {
+  margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+/* ===== PRODUCT SEARCH ===== */
+.product-list { display: flex; flex-direction: column; gap: 8px; }
+.product-item {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; background: white;
+}
+.product-item-header {
+  padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; background: #FAFAFA;
+  transition: background 0.15s;
+}
+.product-item-header:hover { background: #F3F4F6; }
+.product-thumb {
+  width: 36px; height: 36px; border-radius: 4px;
+  object-fit: cover; background: #E5E7EB;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text-muted); flex-shrink: 0;
+  overflow: hidden;
+}
+.product-name { font-weight: 500; font-size: 13px; }
+.product-brand { font-size: 11px; color: var(--text-muted); }
+.product-expand-btn { margin-left: auto; color: var(--text-muted); }
+.product-variants { padding: 8px; display: none; border-top: 1px solid var(--border); }
+.product-variants.open { display: block; }
+.variant-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px;
+  transition: background 0.1s;
+}
+.variant-row:hover { background: var(--bg); }
+.variant-swatch {
+  width: 14px; height: 14px; border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0;
+}
+.variant-name { font-size: 12px; flex: 1; }
+.variant-add-btn {
+  font-size: 11px; padding: 3px 8px;
+  background: var(--primary-light); color: var(--primary-dark);
+  border: none; border-radius: 4px; cursor: pointer; font-weight: 500;
+  transition: background 0.1s; white-space: nowrap;
+}
+.variant-add-btn:hover { background: var(--primary); color: white; }
+
+/* ===== ORDER LIST ITEMS ===== */
+.order-list { display: flex; flex-direction: column; gap: 6px; }
+.order-item {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: white; display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  transition: box-shadow 0.15s;
+  user-select: none;
+}
+.order-item.dragging { box-shadow: var(--shadow-lg); opacity: 0.8; }
+.drag-handle {
+  color: var(--border-dark); cursor: grab; padding: 2px;
+  display: flex; align-items: center;
+}
+.drag-handle:active { cursor: grabbing; }
+.order-item-thumb {
+  width: 40px; height: 40px; border-radius: 4px;
+  background: #E5E7EB; flex-shrink: 0; overflow: hidden;
+}
+.order-item-info { flex: 1; min-width: 0; }
+.order-item-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-item-meta { font-size: 11px; color: var(--text-muted); }
+.order-item-sizes { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
+.size-chip {
+  font-size: 10px; padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--border-dark); cursor: pointer; background: white;
+  transition: all 0.1s;
+}
+.size-chip.checked { background: var(--primary); color: white; border-color: var(--primary); }
+.order-item-remove {
+  color: var(--text-light); cursor: pointer; padding: 4px; border-radius: 4px;
+  border: none; background: transparent;
+  transition: all 0.1s;
+}
+.order-item-remove:hover { background: var(--danger-light); color: var(--danger); }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text-muted);
+}
+.empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.3; }
+.empty-state p { font-size: 13px; }
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed; top: 16px; right: 16px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px; min-width: 240px;
+  animation: slideInRight 0.25s ease;
+}
+.toast-success { background: var(--success); color: white; }
+.toast-error { background: var(--danger); color: white; }
+.toast-info { background: var(--primary); color: white; }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== STATUS INDICATOR ===== */
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  display: inline-block; margin-right: 5px;
+}
+.status-dot.active { background: var(--success); }
+.status-dot.inactive { background: var(--text-light); }
+
+/* ===== FILTER BAR ===== */
+.filter-bar {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.filter-bar .select { width: auto; }
+
+/* ===== SUCCESS PANEL ===== */
+.success-panel {
+  text-align: center; padding: 40px 32px;
+}
+.success-icon {
+  width: 64px; height: 64px; background: var(--success-light);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 28px;
+}
+
+/* ===== QUICK LINKS ===== */
+.quick-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.quick-link {
+  padding: 8px 14px; border-radius: var(--radius);
+  background: var(--primary-light); color: var(--primary-dark);
+  font-size: 13px; font-weight: 500; cursor: pointer; border: none;
+  display: flex; align-items: center; gap: 6px;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+.quick-link:hover { background: var(--primary); color: white; }
+.quick-link.accent { background: var(--accent-light); color: var(--accent-dark); }
+.quick-link.accent:hover { background: var(--accent); color: white; }
+
+/* ===== DETAIL HEADER ===== */
+.detail-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.detail-header-title h2 { font-size: 20px; font-weight: 700; }
+.detail-header-title p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+/* ===== METADATA GRID ===== */
+.meta-grid {
+  display: grid; grid-template-columns: 140px 1fr; gap: 10px 16px;
+  font-size: 13px;
+}
+.meta-label { color: var(--text-muted); font-weight: 500; padding: 2px 0; }
+.meta-value { color: var(--text); padding: 2px 0; }
+.meta-value a { color: var(--primary); text-decoration: none; }
+.meta-value a:hover { text-decoration: underline; }
+
+/* ===== STEP INDICATOR (create client steps) ===== */
+.step-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 20px; background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.step-title { font-weight: 600; font-size: 14px; }
+.step-subtitle { font-size: 12px; color: var(--text-muted); }
+
+/* ===== PORTAL URL PREVIEW ===== */
+.url-preview {
+  display: flex; align-items: center; gap: 8px;
+  background: #F8FAFC; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+  font-family: 'Courier New', monospace; font-size: 13px;
+  color: var(--primary);
+}
+.url-preview-lock { color: var(--success); }
+
+/* ===== CHECKBOX ===== */
+.checkbox-label {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 13px;
+}
+.checkbox-label input[type=checkbox] {
+  width: 15px; height: 15px; accent-color: var(--primary);
+}
+
+/* Split view grid */
+.split-view-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .split-view { grid-template-columns: 1fr; height: auto; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .filter-bar { flex-wrap: wrap; }
+  .topbar { padding: 0 16px; }
+  .content { padding: 16px; }
+
+  .mobile-tab-bar {
+    display: flex; background: var(--card); border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .mobile-tab {
+    flex: 1; padding: 10px 8px; text-align: center;
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+    border-bottom: 2px solid transparent; cursor: pointer; border-top: none;
+    border-left: none; border-right: none; background: transparent;
+  }
+  .mobile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .mobile-only { display: block !important; }
+  .desktop-only { display: none !important; }
+  .split-view-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+}
+
+/* Scrollable split pane body */
+.product-search-pane { border: 1px solid var(--border); border-radius: var(--radius); background: white; display: flex; flex-direction: column; }
+.product-search-head { padding: 12px; border-bottom: 1px solid var(--border); }
+.product-search-results { flex: 1; overflow-y: auto; padding: 8px; max-height: 500px; }
+
+.orderlist-pane { border: 1px solid var(--border); border-radius: var(--radius); background: white; display: flex; flex-direction: column; }
+.orderlist-head { padding: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.orderlist-body { flex: 1; overflow-y: auto; padding: 10px; max-height: 500px; }
+.orderlist-count-badge { background: var(--primary); color: white; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+/* Summary card for step 3 */
+.summary-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+.summary-row + .summary-row { border-top: 1px solid var(--border); }
+.summary-row-label { color: var(--text-muted); }
+.summary-row-value { font-weight: 500; }
+
+/* Order detail totals */
+.totals-row { background: #F8FAFC; font-weight: 600; }
+
+/* Drag over indicator */
+.drag-over { border: 2px dashed var(--primary) !important; background: var(--primary-light) !important; }
+
+/* Client row clickable */
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--primary-light); }
+
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 49;
+}
+.sidebar-overlay.open { display: block; }
+
+/* Collapsible info in order detail */
+.info-section { margin-bottom: 20px; }
+.info-section h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">KMS</div>
+      <div>
+        <div class="sidebar-brand-text">KMS Beheer</div>
+        <div class="sidebar-brand-sub">VK Reklame</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Overzicht</div>
+      <a class="sidebar-item active" onclick="navigateTo('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+
+      <div class="sidebar-section-label" style="margin-top:8px">Klanten</div>
+      <a class="sidebar-item" onclick="navigateTo('customers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Klanten
+      </a>
+      <a class="sidebar-item" onclick="navigateTo('create-customer')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Nieuwe klant
+      </a>
+
+      <div class="sidebar-section-label" style="margin-top:8px">Bestellingen</div>
+      <a class="sidebar-item" onclick="navigateTo('orders')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Bestellingen
+        <span class="sidebar-badge">3</span>
+      </a>
+    </nav>
+    <div style="padding:12px 8px; border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.05);">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">JD</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#E2E8F0;">Jan de Vries</div>
+          <div style="font-size:11px;color:#64748B;">VK Reklame</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button onclick="toggleMobileSidebar()" style="display:none;padding:6px;border:none;background:transparent;cursor:pointer;" id="mobileMenuBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">KMS Dashboard</div>
+        <div class="topbar-breadcrumb" id="topbarBreadcrumb" style="display:none;"></div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+
+    <div class="content">
+
+      <!-- ========== SCREEN 1: DASHBOARD ========== -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--primary-light);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div class="stat-label">Actieve klanten</div>
+            <div class="stat-value">12</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-light);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+            </div>
+            <div class="stat-label">Nieuwe bestellingen</div>
+            <div class="stat-value">3 <span class="stat-badge">Nieuw</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--primary-light);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="stat-label">Bestellingen deze maand</div>
+            <div class="stat-value">27</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--success-light);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="stat-label">Omzet deze maand</div>
+            <div class="stat-value">€4.230</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:20px;">
+          <!-- Recent orders -->
+          <div class="card" style="grid-column: span 2 / span 2;">
+            <div class="card-header">
+              <div class="card-title">Recente bestellingen</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('orders')">Alle bestellingen →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th><th>Klant</th><th>Datum</th><th>Items</th><th>Totaal</th><th>Status</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0042</strong></td>
+                    <td>Acme BV</td>
+                    <td>27 mrt 2026</td>
+                    <td>12</td>
+                    <td>€1.247,50</td>
+                    <td><span class="badge badge-new badge-dot">Nieuw</span></td>
+                    <td><button class="btn btn-ghost btn-sm btn-icon" title="Bekijk">→</button></td>
+                  </tr>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0041</strong></td>
+                    <td>Bakkerij Piet</td>
+                    <td>26 mrt 2026</td>
+                    <td>3</td>
+                    <td>€312,00</td>
+                    <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                    <td><button class="btn btn-ghost btn-sm btn-icon">→</button></td>
+                  </tr>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0040</strong></td>
+                    <td>Bouwbedrijf Jansen</td>
+                    <td>25 mrt 2026</td>
+                    <td>8</td>
+                    <td>€876,20</td>
+                    <td><span class="badge badge-processing badge-dot">In behandeling</span></td>
+                    <td><button class="btn btn-ghost btn-sm btn-icon">→</button></td>
+                  </tr>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0039</strong></td>
+                    <td>Acme BV</td>
+                    <td>22 mrt 2026</td>
+                    <td>5</td>
+                    <td>€445,00</td>
+                    <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                    <td><button class="btn btn-ghost btn-sm btn-icon">→</button></td>
+                  </tr>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0038</strong></td>
+                    <td>Schoonmaak Plus</td>
+                    <td>20 mrt 2026</td>
+                    <td>15</td>
+                    <td>€1.890,00</td>
+                    <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                    <td><button class="btn btn-ghost btn-sm btn-icon">→</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <h3 style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">Snelkoppelingen</h3>
+          <div class="quick-links">
+            <button class="quick-link accent" onclick="navigateTo('create-customer')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Nieuwe klant aanmaken
+            </button>
+            <button class="quick-link" onclick="navigateTo('orders')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+              Bestellingen bekijken
+            </button>
+            <button class="quick-link" onclick="navigateTo('customers')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              Klantenlijst
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SCREEN 2: CUSTOMERS LIST ========== -->
+      <div class="screen" id="screen-customers">
+        <div class="filter-bar">
+          <input type="text" class="input input-search" placeholder="Zoek op bedrijfsnaam of slug..." style="max-width:320px;" oninput="filterCustomers(this.value)">
+          <select class="select" style="width:auto;" onchange="filterCustomerStatus(this.value)">
+            <option value="">Alle statussen</option>
+            <option value="actief">Actief</option>
+            <option value="inactief">Inactief</option>
+          </select>
+          <div style="margin-left:auto;">
+            <button class="btn btn-accent" onclick="navigateTo('create-customer')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nieuwe klant
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table id="customersTable">
+              <thead>
+                <tr>
+                  <th>Bedrijfsnaam</th>
+                  <th>Slug</th>
+                  <th>Contact email</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Laatst besteld</th>
+                  <th>Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="clickable" onclick="navigateTo('customer-detail')">
+                  <td><strong>Acme BV</strong></td>
+                  <td><code style="font-size:11px;background:#F3F4F6;padding:2px 6px;border-radius:4px;">acme-bv</code></td>
+                  <td>info@acme-bv.nl</td>
+                  <td>12</td>
+                  <td><span class="badge badge-active badge-dot">Actief</span></td>
+                  <td>27 mrt 2026</td>
+                  <td>
+                    <div class="td-actions">
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('customer-detail')">Bewerken</button>
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showToast('Link gekopieerd!','info')">Kopieer link</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('customer-detail')">
+                  <td><strong>Bakkerij Piet</strong></td>
+                  <td><code style="font-size:11px;background:#F3F4F6;padding:2px 6px;border-radius:4px;">bakkerij-piet</code></td>
+                  <td>piet@bakkerij.nl</td>
+                  <td>5</td>
+                  <td><span class="badge badge-active badge-dot">Actief</span></td>
+                  <td>26 mrt 2026</td>
+                  <td>
+                    <div class="td-actions">
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('customer-detail')">Bewerken</button>
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showToast('Link gekopieerd!','info')">Kopieer link</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('customer-detail')">
+                  <td><strong>Bouwbedrijf Jansen</strong></td>
+                  <td><code style="font-size:11px;background:#F3F4F6;padding:2px 6px;border-radius:4px;">jansen-bouw</code></td>
+                  <td>info@jansenbouw.nl</td>
+                  <td>23</td>
+                  <td><span class="badge badge-active badge-dot">Actief</span></td>
+                  <td>25 mrt 2026</td>
+                  <td>
+                    <div class="td-actions">
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('customer-detail')">Bewerken</button>
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showToast('Link gekopieerd!','info')">Kopieer link</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('customer-detail')">
+                  <td><strong>Schoonmaak Plus</strong></td>
+                  <td><code style="font-size:11px;background:#F3F4F6;padding:2px 6px;border-radius:4px;">schoonmaak-plus</code></td>
+                  <td>admin@smplus.nl</td>
+                  <td>8</td>
+                  <td><span class="badge badge-inactive badge-dot">Inactief</span></td>
+                  <td>20 mrt 2026</td>
+                  <td>
+                    <div class="td-actions">
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('customer-detail')">Bewerken</button>
+                      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showToast('Link gekopieerd!','info')">Kopieer link</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SCREEN 3: CREATE CUSTOMER ========== -->
+      <div class="screen" id="screen-create-customer">
+        <!-- Wizard steps -->
+        <div style="display:flex;align-items:center;gap:0;margin-bottom:24px;" id="wizardSteps">
+          <div class="wizard-step active" id="wstep1">
+            <div class="wizard-step-num">1</div>
+            <div class="wizard-step-label">Gripp-organisatie</div>
+          </div>
+          <div class="wizard-step-line" id="wline1"></div>
+          <div class="wizard-step" id="wstep2">
+            <div class="wizard-step-num">2</div>
+            <div class="wizard-step-label">Bestellijst samenstellen</div>
+          </div>
+          <div class="wizard-step-line" id="wline2"></div>
+          <div class="wizard-step" id="wstep3">
+            <div class="wizard-step-num">3</div>
+            <div class="wizard-step-label">Activeren</div>
+          </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="wizard-panel active card" id="wizardPanel1">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Gripp-organisatie koppelen</div>
+              <div class="step-subtitle">Zoek de klant op in Gripp CRM om gegevens automatisch in te vullen</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Gripp-organisatie zoeken</label>
+              <div class="autocomplete-wrap">
+                <input type="text" class="input input-search" id="grippSearch" placeholder="Zoek op bedrijfsnaam in Gripp..." oninput="handleGrippSearch(this.value)" autocomplete="off">
+                <div class="autocomplete-dropdown" id="grippDropdown">
+                  <div class="autocomplete-item" onclick="selectGrippOrg('Acme BV','Amsterdam','info@acme-bv.nl','10234')">
+                    <div class="autocomplete-item-name">Acme BV</div>
+                    <div class="autocomplete-item-sub">Amsterdam · Gripp #10234</div>
+                  </div>
+                  <div class="autocomplete-item" onclick="selectGrippOrg('Acme Digital','Utrecht','contact@acmedigital.nl','10312')">
+                    <div class="autocomplete-item-name">Acme Digital</div>
+                    <div class="autocomplete-item-sub">Utrecht · Gripp #10312</div>
+                  </div>
+                  <div class="autocomplete-item" onclick="selectGrippOrg('Academie Noord','Groningen','info@acadnoord.nl','10418')">
+                    <div class="autocomplete-item-name">Academie Noord</div>
+                    <div class="autocomplete-item-sub">Groningen · Gripp #10418</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="grippSelectedBanner" style="display:none;background:var(--success-light);border:1px solid #A7F3C6;border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--success);display:none;align-items:center;gap:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="grippSelectedText"></span>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Bedrijfsnaam</label>
+                <input type="text" class="input" id="clientName" placeholder="Wordt automatisch ingevuld" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gripp-nummer</label>
+                <input type="text" class="input" id="clientGrippNum" placeholder="—" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact e-mail</label>
+                <input type="text" class="input" id="clientEmail" placeholder="Wordt automatisch ingevuld" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Portaal-slug <span style="color:var(--text-muted);font-weight:400;font-size:11px;">(bewerkbaar)</span></label>
+                <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border-dark);border-radius:var(--radius);overflow:hidden;">
+                  <span style="padding:8px 10px;background:#F3F4F6;border-right:1px solid var(--border-dark);color:var(--text-muted);font-size:12px;white-space:nowrap;">bestellen.vkreklame.nl/</span>
+                  <input type="text" id="clientSlug" style="border:none;outline:none;padding:8px 10px;flex:1;font-size:13px;font-family:monospace;" placeholder="bedrijfsnaam">
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-footer">
+              <div style="font-size:12px;color:var(--text-muted);">Stap 1 van 3</div>
+              <button class="btn btn-primary" onclick="goToWizardStep(2)" id="wizardStep1Next" disabled>
+                Volgende: Bestellijst samenstellen →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="wizard-panel card" id="wizardPanel2">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">Bestellijst samenstellen</div>
+              <div class="step-subtitle">Voeg producten toe die de klant kan bestellen via het portaal</div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:16px;">
+            <!-- Mobile tabs -->
+            <div class="mobile-tab-bar mobile-only">
+              <button class="mobile-tab active" id="mobileTabProducts" onclick="switchMobileTab('products')">Producten</button>
+              <button class="mobile-tab" id="mobileTabOrderlist" onclick="switchMobileTab('orderlist')">Bestellijst (<span id="mobileOrderCount">0</span>)</button>
+            </div>
+
+            <div class="split-view-grid" id="splitView">
+              <!-- Product zoeker -->
+              <div class="product-search-pane" id="paneProducts">
+                <div class="product-search-head">
+                  <input type="text" class="input input-search" placeholder="Zoek product op naam, merk of categorie..." oninput="filterProducts(this.value)">
+                </div>
+                <div class="product-search-results" id="productSearchResults">
+                  <!-- Products rendered by JS -->
+                </div>
+              </div>
+
+              <!-- Bestellijst -->
+              <div class="orderlist-pane" id="paneOrderlist">
+                <div class="orderlist-head">
+                  <div style="font-weight:600;font-size:13px;">Bestellijst</div>
+                  <span class="orderlist-count-badge" id="orderlistCountBadge">0 items</span>
+                </div>
+                <div class="orderlist-body" id="orderlistBody">
+                  <div class="empty-state" id="orderlistEmpty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    <p>Voeg producten toe via de zoeker</p>
+                  </div>
+                  <div class="order-list" id="orderlistItems"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-footer">
+              <button class="btn btn-outline" onclick="goToWizardStep(1)">← Terug</button>
+              <button class="btn btn-primary" onclick="goToWizardStep(3)">Volgende: Activeren →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="wizard-panel card" id="wizardPanel3">
+          <div class="step-header">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">Activeren</div>
+              <div class="step-subtitle">Controleer de gegevens en activeer het klantportaal</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="successPanel" style="display:none;" class="success-panel">
+              <div class="success-icon">✓</div>
+              <h3 style="font-size:18px;font-weight:700;margin-bottom:6px;">Klantportaal geactiveerd!</h3>
+              <p style="color:var(--text-muted);margin-bottom:20px;" id="successClientName"></p>
+              <div class="url-preview" style="justify-content:center;margin-bottom:20px;">
+                <span class="url-preview-lock">🔒</span>
+                <span id="successUrl"></span>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="sendMagicLink()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                  Verstuur magic link
+                </button>
+                <button class="btn btn-outline" onclick="navigateTo('customer-detail')">Naar klantpagina</button>
+                <button class="btn btn-outline" onclick="navigateTo('create-customer')">Nieuwe klant aanmaken</button>
+              </div>
+            </div>
+
+            <div id="activatePanel">
+              <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Samenvatting</h3>
+              <div class="summary-card" style="margin-bottom:20px;">
+                <div class="summary-row">
+                  <span class="summary-row-label">Bedrijfsnaam</span>
+                  <span class="summary-row-value" id="summaryName">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-row-label">Gripp-nummer</span>
+                  <span class="summary-row-value" id="summaryGripp">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-row-label">Contact e-mail</span>
+                  <span class="summary-row-value" id="summaryEmail">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="summary-row-label">Producten in lijst</span>
+                  <span class="summary-row-value" id="summaryItems">0 items</span>
+                </div>
+              </div>
+
+              <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Portaal-URL</h3>
+              <div class="url-preview" style="margin-bottom:20px;">
+                <span class="url-preview-lock">🔒</span>
+                <span id="summaryUrl">bestellen.vkreklame.nl/</span>
+              </div>
+
+              <div class="wizard-footer">
+                <button class="btn btn-outline" onclick="goToWizardStep(2)">← Terug</button>
+                <button class="btn btn-success btn-lg" onclick="activateClient()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Klantportaal activeren
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SCREEN 4: CUSTOMER DETAIL ========== -->
+      <div class="screen" id="screen-customer-detail">
+        <div class="detail-header">
+          <div class="detail-header-title">
+            <h2>Acme BV</h2>
+            <p>acme-bv · Aangemaakt op 15 jan 2026</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-active" style="font-size:12px;">Actief</span>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Link gekopieerd naar klembord','info')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              Portaallink
+            </button>
+            <button class="btn btn-outline btn-sm">Deactiveren</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('cd', 'data', this)">Gegevens</button>
+          <button class="tab" onclick="switchTab('cd', 'orderlist', this)">Bestellijst <span style="background:var(--primary-light);color:var(--primary);border-radius:10px;padding:0 6px;font-size:11px;margin-left:4px;">12</span></button>
+          <button class="tab" onclick="switchTab('cd', 'orders', this)">Bestellingen</button>
+        </div>
+
+        <!-- Data tab -->
+        <div class="tab-content active" id="cd-data">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Klantgegevens</div>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Opgeslagen','success')">Opslaan</button>
+            </div>
+            <div class="card-body">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">Bedrijfsnaam</label>
+                  <input type="text" class="input" value="Acme BV">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Gripp-nummer</label>
+                  <input type="text" class="input" value="10234" readonly style="background:#F9FAFB;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Portaal-slug</label>
+                  <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border-dark);border-radius:var(--radius);overflow:hidden;">
+                    <span style="padding:8px 10px;background:#F3F4F6;border-right:1px solid var(--border-dark);color:var(--text-muted);font-size:12px;white-space:nowrap;">bestellen.vkreklame.nl/</span>
+                    <input type="text" value="acme-bv" style="border:none;outline:none;padding:8px 10px;flex:1;font-size:13px;font-family:monospace;">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contact e-mail</label>
+                  <input type="text" class="input" value="info@acme-bv.nl">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select class="select">
+                    <option selected>Actief</option>
+                    <option>Inactief</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Aangemaakt op</label>
+                  <input type="text" class="input" value="15 januari 2026" readonly style="background:#F9FAFB;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orderlist tab -->
+        <div class="tab-content" id="cd-orderlist">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Bestellijst — Acme BV</div>
+              <div style="font-size:12px;color:var(--text-muted);">12 producten</div>
+            </div>
+            <div class="card-body" style="padding:16px;">
+              <div class="split-view-grid">
+                <div class="product-search-pane">
+                  <div class="product-search-head">
+                    <input type="text" class="input input-search" placeholder="Zoek product..." oninput="filterProducts2(this.value)">
+                  </div>
+                  <div class="product-search-results" id="productSearchResults2"></div>
+                </div>
+                <div class="orderlist-pane">
+                  <div class="orderlist-head">
+                    <div style="font-weight:600;font-size:13px;">Huidige bestellijst</div>
+                    <span class="orderlist-count-badge" id="orderlistCountBadge2">3 items</span>
+                  </div>
+                  <div class="orderlist-body" id="orderlistItems2"></div>
+                </div>
+              </div>
+              <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+                <button class="btn btn-primary" onclick="showToast('Bestellijst opgeslagen','success')">Wijzigingen opslaan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders tab -->
+        <div class="tab-content" id="cd-orders">
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>#</th><th>Datum</th><th>Items</th><th>Totaal</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0042</strong></td><td>27 mrt 2026</td><td>12</td><td>€1.247,50</td>
+                    <td><span class="badge badge-new badge-dot">Nieuw</span></td>
+                    <td><button class="btn btn-ghost btn-sm">→</button></td>
+                  </tr>
+                  <tr class="clickable" onclick="navigateTo('order-detail')">
+                    <td><strong>#0039</strong></td><td>22 mrt 2026</td><td>5</td><td>€445,00</td>
+                    <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                    <td><button class="btn btn-ghost btn-sm">→</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SCREEN 5: ORDERS LIST ========== -->
+      <div class="screen" id="screen-orders">
+        <div class="filter-bar">
+          <select class="select" onchange="filterOrders()">
+            <option value="">Alle statussen</option>
+            <option value="nieuw">Nieuw</option>
+            <option value="behandeling">In behandeling</option>
+            <option value="verwerkt">Verwerkt</option>
+          </select>
+          <select class="select" onchange="filterOrders()">
+            <option value="">Alle klanten</option>
+            <option>Acme BV</option>
+            <option>Bakkerij Piet</option>
+            <option>Bouwbedrijf Jansen</option>
+            <option>Schoonmaak Plus</option>
+          </select>
+          <input type="date" class="input" style="width:140px;" title="Van">
+          <input type="date" class="input" style="width:140px;" title="Tot">
+          <div style="margin-left:auto;font-size:13px;color:var(--text-muted);">5 bestellingen</div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Klant</th><th>Datum</th><th>Items</th><th>Totaal</th><th>Status</th><th>Acties</th></tr>
+              </thead>
+              <tbody>
+                <tr class="clickable" onclick="navigateTo('order-detail')">
+                  <td><strong>#0042</strong></td><td>Acme BV</td><td>27 mrt 2026</td><td>12</td><td>€1.247,50</td>
+                  <td><span class="badge badge-new badge-dot">Nieuw</span></td>
+                  <td><div class="td-actions">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();navigateTo('order-detail')">Bekijk</button>
+                    <select class="select" style="padding:3px 8px;font-size:11px;width:auto;" onclick="event.stopPropagation()" onchange="changeOrderStatus(this,'row-0042')">
+                      <option>Nieuw</option><option>In behandeling</option><option>Verwerkt</option>
+                    </select>
+                  </div></td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('order-detail')">
+                  <td><strong>#0041</strong></td><td>Bakkerij Piet</td><td>26 mrt 2026</td><td>3</td><td>€312,00</td>
+                  <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                  <td><div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('order-detail')">Bekijk</button>
+                    <select class="select" style="padding:3px 8px;font-size:11px;width:auto;" onclick="event.stopPropagation()">
+                      <option>Nieuw</option><option>In behandeling</option><option selected>Verwerkt</option>
+                    </select>
+                  </div></td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('order-detail')">
+                  <td><strong>#0040</strong></td><td>Bouwbedrijf Jansen</td><td>25 mrt 2026</td><td>8</td><td>€876,20</td>
+                  <td><span class="badge badge-processing badge-dot">In behandeling</span></td>
+                  <td><div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigateTo('order-detail')">Bekijk</button>
+                    <select class="select" style="padding:3px 8px;font-size:11px;width:auto;" onclick="event.stopPropagation()">
+                      <option>Nieuw</option><option selected>In behandeling</option><option>Verwerkt</option>
+                    </select>
+                  </div></td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('order-detail')">
+                  <td><strong>#0039</strong></td><td>Acme BV</td><td>22 mrt 2026</td><td>5</td><td>€445,00</td>
+                  <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                  <td><div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Bekijk</button>
+                    <select class="select" style="padding:3px 8px;font-size:11px;width:auto;" onclick="event.stopPropagation()">
+                      <option>Nieuw</option><option>In behandeling</option><option selected>Verwerkt</option>
+                    </select>
+                  </div></td>
+                </tr>
+                <tr class="clickable" onclick="navigateTo('order-detail')">
+                  <td><strong>#0038</strong></td><td>Schoonmaak Plus</td><td>20 mrt 2026</td><td>15</td><td>€1.890,00</td>
+                  <td><span class="badge badge-done badge-dot">Verwerkt</span></td>
+                  <td><div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Bekijk</button>
+                    <select class="select" style="padding:3px 8px;font-size:11px;width:auto;" onclick="event.stopPropagation()">
+                      <option>Nieuw</option><option>In behandeling</option><option selected>Verwerkt</option>
+                    </select>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SCREEN 6: ORDER DETAIL ========== -->
+      <div class="screen" id="screen-order-detail">
+        <div class="detail-header">
+          <div class="detail-header-title">
+            <h2>Bestelling #0042</h2>
+            <p>Acme BV · Geplaatst op 27 maart 2026 om 14:32</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-new" id="orderStatusBadge" style="font-size:12px;padding:4px 10px;">Nieuw</span>
+            <select class="select" style="width:auto;font-size:12px;" onchange="changeDetailStatus(this)">
+              <option selected>Nieuw</option>
+              <option>In behandeling</option>
+              <option>Verwerkt</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:20px;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Bestelgegevens</div></div>
+            <div class="card-body">
+              <div class="meta-grid">
+                <div class="meta-label">Geplaatst door</div>
+                <div class="meta-value">jan.devries@acme-bv.nl</div>
+                <div class="meta-label">Datum/tijd</div>
+                <div class="meta-value">27 maart 2026 om 14:32</div>
+                <div class="meta-label">Referentie</div>
+                <div class="meta-value">REF-2026-042</div>
+                <div class="meta-label">Klant</div>
+                <div class="meta-value"><a onclick="navigateTo('customer-detail');return false;" href="#">Acme BV</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Opmerkingen</div></div>
+            <div class="card-body">
+              <textarea class="textarea" rows="4" style="resize:vertical;">Graag voor maandag 31 maart leveren. Bezorging op bedrijfsadres, bellen bij aankomst.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Bestelregels</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Product</th><th>Kleur</th><th>Maat</th><th>EAN</th><th style="text-align:right;">Aantal</th><th style="text-align:right;">Stukprijs</th><th style="text-align:right;">Subtotaal</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Mascot Accelerate Werkjas</td><td>Navy</td><td>S</td><td>8711123456781</td>
+                  <td style="text-align:right;">2</td><td style="text-align:right;">€89,50</td><td style="text-align:right;">€179,00</td>
+                </tr>
+                <tr>
+                  <td>Mascot Accelerate Werkjas</td><td>Navy</td><td>M</td><td>8711123456782</td>
+                  <td style="text-align:right;">3</td><td style="text-align:right;">€89,50</td><td style="text-align:right;">€268,50</td>
+                </tr>
+                <tr>
+                  <td>Tricorp Poloshirt 202703</td><td>Wit</td><td>L</td><td>8711234567801</td>
+                  <td style="text-align:right;">5</td><td style="text-align:right;">€24,50</td><td style="text-align:right;">€122,50</td>
+                </tr>
+                <tr>
+                  <td>Tricorp Poloshirt 202703</td><td>Navy</td><td>M</td><td>8711234567812</td>
+                  <td style="text-align:right;">4</td><td style="text-align:right;">€24,50</td><td style="text-align:right;">€98,00</td>
+                </tr>
+                <tr>
+                  <td>Tricorp Werkbroek 502005</td><td>Donkergrijs</td><td>50</td><td>8711345678901</td>
+                  <td style="text-align:right;">2</td><td style="text-align:right;">€54,75</td><td style="text-align:right;">€109,50</td>
+                </tr>
+                <tr>
+                  <td>Emma Frontier Veiligheidsschoen</td><td>Zwart</td><td>42</td><td>8711456789012</td>
+                  <td style="text-align:right;">2</td><td style="text-align:right;">€112,50</td><td style="text-align:right;">€225,00</td>
+                </tr>
+                <tr>
+                  <td>Mascot Advanced Softshell</td><td>Navy</td><td>XL</td><td>8711567890123</td>
+                  <td style="text-align:right;">1</td><td style="text-align:right;">€145,00</td><td style="text-align:right;">€145,00</td>
+                </tr>
+                <tr>
+                  <td>Tricorp Sweater 301015</td><td>Navy</td><td>L</td><td>8711678901234</td>
+                  <td style="text-align:right;">2</td><td style="text-align:right;">€37,50</td><td style="text-align:right;">€75,00</td>
+                </tr>
+                <tr class="totals-row">
+                  <td colspan="6" style="text-align:right;padding-right:12px;">Totaal (excl. BTW)</td>
+                  <td style="text-align:right;font-weight:700;color:var(--text);">€1.222,50</td>
+                </tr>
+                <tr class="totals-row">
+                  <td colspan="6" style="text-align:right;padding-right:12px;color:var(--text-muted);">BTW (21%)</td>
+                  <td style="text-align:right;color:var(--text-muted);">€256,73</td>
+                </tr>
+                <tr class="totals-row">
+                  <td colspan="6" style="text-align:right;padding-right:12px;font-size:14px;font-weight:700;">Totaal (incl. BTW)</td>
+                  <td style="text-align:right;font-size:16px;font-weight:700;color:var(--primary);">€1.479,23</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="showToast('Bevestigingsmail verstuurd naar jan.devries@acme-bv.nl','success')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+            Email bevestiging
+          </button>
+          <button class="btn btn-outline" onclick="showToast('CSV geëxporteerd: bestelling-0042.csv','success')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporteer CSV
+          </button>
+          <button class="btn btn-outline" disabled title="Binnenkort beschikbaar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Naar Gripp →
+            <span style="font-size:10px;background:#F3F4F6;color:var(--text-muted);padding:1px 6px;border-radius:8px;margin-left:4px;">binnenkort</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ===== DATA =====
+const PRODUCTS = [
+  {
+    id: 1, name: 'Mascot Accelerate Werkjas', brand: 'Mascot',
+    variants: [
+      { id: 'v1a', name: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v1b', name: 'Rood/Zwart', color: '#8B0000', sizes: ['S','M','L','XL','XXL'] },
+      { id: 'v1c', name: 'Antraciet', color: '#3D3D3D', sizes: ['XS','S','M','L','XL','XXL','3XL'] },
+    ]
+  },
+  {
+    id: 2, name: 'Tricorp Poloshirt 202703', brand: 'Tricorp',
+    variants: [
+      { id: 'v2a', name: 'Wit', color: '#F8F8F8', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v2b', name: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v2c', name: 'Zwart', color: '#1A1A1A', sizes: ['XS','S','M','L','XL','XXL','3XL'] },
+    ]
+  },
+  {
+    id: 3, name: 'Tricorp Werkbroek 502005', brand: 'Tricorp',
+    variants: [
+      { id: 'v3a', name: 'Donkergrijs', color: '#4A4A4A', sizes: ['44','46','48','50','52','54','56','58'] },
+      { id: 'v3b', name: 'Zwart', color: '#1A1A1A', sizes: ['44','46','48','50','52','54','56','58'] },
+    ]
+  },
+  {
+    id: 4, name: 'Emma Frontier Veiligheidsschoen', brand: 'Emma',
+    variants: [
+      { id: 'v4a', name: 'Zwart', color: '#1A1A1A', sizes: ['38','39','40','41','42','43','44','45','46'] },
+    ]
+  },
+  {
+    id: 5, name: 'Mascot Advanced Softshell', brand: 'Mascot',
+    variants: [
+      { id: 'v5a', name: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v5b', name: 'Zwart', color: '#1A1A1A', sizes: ['XS','S','M','L','XL','XXL'] },
+    ]
+  },
+  {
+    id: 6, name: 'Tricorp Sweater 301015', brand: 'Tricorp',
+    variants: [
+      { id: 'v6a', name: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v6b', name: 'Grijs', color: '#9CA3AF', sizes: ['XS','S','M','L','XL','XXL'] },
+      { id: 'v6c', name: 'Zwart', color: '#1A1A1A', sizes: ['XS','S','M','L','XL','XXL'] },
+    ]
+  },
+];
+
+let orderlistItems = [];
+let orderlistItems2 = [
+  { variantId: 'v2b', productName: 'Tricorp Poloshirt 202703', variantName: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'], selectedSizes: ['M','L','XL'] },
+  { variantId: 'v1a', productName: 'Mascot Accelerate Werkjas', variantName: 'Navy', color: '#1E3A6E', sizes: ['XS','S','M','L','XL','XXL'], selectedSizes: ['M','L'] },
+  { variantId: 'v3a', productName: 'Tricorp Werkbroek 502005', variantName: 'Donkergrijs', color: '#4A4A4A', sizes: ['44','46','48','50','52','54','56','58'], selectedSizes: ['48','50','52'] },
+];
+let currentWizardStep = 1;
+let dragSrcIdx = null;
+
+// ===== NAVIGATION =====
+const SCREENS = {
+  'dashboard': { title: 'KMS Dashboard', sidebar: 'Dashboard' },
+  'customers': { title: 'Klanten', sidebar: 'Klanten' },
+  'create-customer': { title: 'Nieuwe klant aanmaken', sidebar: 'Nieuwe klant', breadcrumb: 'Klanten > Nieuwe klant' },
+  'customer-detail': { title: 'Klant detail', sidebar: 'Klanten', breadcrumb: 'Klanten > Acme BV' },
+  'orders': { title: 'Bestellingen', sidebar: 'Bestellingen' },
+  'order-detail': { title: 'Bestelling #0042', sidebar: 'Bestellingen', breadcrumb: 'Bestellingen > #0042' },
+};
+
+function navigateTo(screen) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  // Show target
+  const el = document.getElementById('screen-' + screen);
+  if (el) el.classList.add('active');
+
+  const cfg = SCREENS[screen] || { title: screen };
+  document.getElementById('topbarTitle').textContent = cfg.title;
+  const bc = document.getElementById('topbarBreadcrumb');
+  if (cfg.breadcrumb) {
+    bc.textContent = cfg.breadcrumb;
+    bc.style.display = 'block';
+  } else {
+    bc.style.display = 'none';
+  }
+
+  // Update sidebar active
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.classList.remove('active');
+    if (cfg.sidebar && item.textContent.trim().startsWith(cfg.sidebar)) {
+      item.classList.add('active');
+    }
+  });
+
+  // Reset wizard if going to create-customer
+  if (screen === 'create-customer') {
+    resetWizard();
+  }
+
+  // Init product lists
+  if (screen === 'create-customer') {
+    renderProductSearch('productSearchResults', 'orderlistItems', orderlistItems, 'orderlistCountBadge', 'mobileOrderCount');
+  }
+  if (screen === 'customer-detail') {
+    renderProductSearch('productSearchResults2', 'orderlistItems2', orderlistItems2, 'orderlistCountBadge2', null);
+    renderOrderlist2();
+  }
+
+  window.scrollTo(0, 0);
+  closeMobileSidebar();
+}
+
+// ===== TABS =====
+function switchTab(prefix, tabName, btn) {
+  // Hide all content for this prefix
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(el => {
+    if (el.classList.contains('tab-content')) el.classList.remove('active');
+  });
+  document.getElementById(prefix + '-' + tabName).classList.add('active');
+
+  // Update tab buttons
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== MOBILE =====
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// Check viewport on load
+function checkMobile() {
+  const isMobile = window.innerWidth <= 768;
+  document.getElementById('mobileMenuBtn').style.display = isMobile ? 'block' : 'none';
+}
+window.addEventListener('resize', checkMobile);
+checkMobile();
+
+// ===== GRIPP AUTOCOMPLETE =====
+function handleGrippSearch(val) {
+  const dropdown = document.getElementById('grippDropdown');
+  if (val.length >= 2) {
+    dropdown.classList.add('open');
+  } else {
+    dropdown.classList.remove('open');
+  }
+}
+
+function selectGrippOrg(name, city, email, grippNum) {
+  document.getElementById('grippSearch').value = name + ' — ' + city;
+  document.getElementById('grippDropdown').classList.remove('open');
+  document.getElementById('clientName').value = name;
+  document.getElementById('clientEmail').value = email;
+  document.getElementById('clientGrippNum').value = '#' + grippNum;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('clientSlug').value = slug;
+
+  const banner = document.getElementById('grippSelectedBanner');
+  banner.style.display = 'flex';
+  document.getElementById('grippSelectedText').textContent = name + ' gekoppeld vanuit Gripp (nummer: ' + grippNum + ')';
+
+  document.getElementById('wizardStep1Next').disabled = false;
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-wrap')) {
+    document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ===== WIZARD =====
+function resetWizard() {
+  currentWizardStep = 1;
+  goToWizardStep(1, true);
+  document.getElementById('grippSearch').value = '';
+  document.getElementById('clientName').value = '';
+  document.getElementById('clientEmail').value = '';
+  document.getElementById('clientGrippNum').value = '';
+  document.getElementById('clientSlug').value = '';
+  document.getElementById('grippSelectedBanner').style.display = 'none';
+  document.getElementById('wizardStep1Next').disabled = true;
+  orderlistItems = [];
+  document.getElementById('activatePanel').style.display = 'block';
+  document.getElementById('successPanel').style.display = 'none';
+}
+
+function goToWizardStep(step, silent) {
+  for (let i = 1; i <= 3; i++) {
+    const panel = document.getElementById('wizardPanel' + i);
+    const stepEl = document.getElementById('wstep' + i);
+    if (panel) panel.classList.toggle('active', i === step);
+    if (stepEl) {
+      stepEl.classList.remove('active', 'done');
+      if (i < step) stepEl.classList.add('done');
+      else if (i === step) stepEl.classList.add('active');
+    }
+    if (i < 3) {
+      const line = document.getElementById('wline' + i);
+      if (line) line.classList.toggle('done', i < step);
+    }
+  }
+  currentWizardStep = step;
+
+  if (step === 3 && !silent) {
+    updateSummary();
+  }
+}
+
+function updateSummary() {
+  document.getElementById('summaryName').textContent = document.getElementById('clientName').value || '—';
+  document.getElementById('summaryGripp').textContent = document.getElementById('clientGrippNum').value || '—';
+  document.getElementById('summaryEmail').textContent = document.getElementById('clientEmail').value || '—';
+  document.getElementById('summaryItems').textContent = orderlistItems.length + ' items';
+  const slug = document.getElementById('clientSlug').value || '…';
+  document.getElementById('summaryUrl').textContent = 'bestellen.vkreklame.nl/' + slug;
+}
+
+function activateClient() {
+  const name = document.getElementById('clientName').value || 'Nieuwe klant';
+  const slug = document.getElementById('clientSlug').value || 'new-client';
+  document.getElementById('activatePanel').style.display = 'none';
+  document.getElementById('successClientName').textContent = name + ' — portaal is live';
+  document.getElementById('successUrl').textContent = 'bestellen.vkreklame.nl/' + slug;
+  document.getElementById('successPanel').style.display = 'block';
+  showToast('Klantportaal voor ' + name + ' is geactiveerd!', 'success');
+}
+
+function sendMagicLink() {
+  const email = document.getElementById('clientEmail').value || 'klant@email.nl';
+  showToast('Magic link verstuurd naar ' + email, 'success');
+}
+
+// ===== MOBILE TABS IN WIZARD =====
+function switchMobileTab(tab) {
+  const pp = document.getElementById('paneProducts');
+  const po = document.getElementById('paneOrderlist');
+  document.getElementById('mobileTabProducts').classList.toggle('active', tab === 'products');
+  document.getElementById('mobileTabOrderlist').classList.toggle('active', tab === 'orderlist');
+
+  if (window.innerWidth <= 768) {
+    if (tab === 'products') { pp.style.display = 'flex'; po.style.display = 'none'; }
+    else { pp.style.display = 'none'; po.style.display = 'flex'; }
+  }
+}
+
+// ===== PRODUCT SEARCH =====
+function renderProductSearch(resultsId, listId, items, badgeId, mobileCountId) {
+  const container = document.getElementById(resultsId);
+  if (!container) return;
+  container.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const el = createProductItem(p, listId, items, badgeId, mobileCountId);
+    container.appendChild(el);
+  });
+}
+
+function createProductItem(product, listId, orderItems, badgeId, mobileCountId) {
+  const div = document.createElement('div');
+  div.className = 'product-item';
+  div.innerHTML = `
+    <div class="product-item-header" onclick="toggleVariants(this)">
+      <div class="product-thumb" style="background:#E5E7EB;font-size:9px;text-align:center;line-height:1.2;padding:2px;">${product.brand.substring(0,1)}</div>
+      <div>
+        <div class="product-name">${product.name}</div>
+        <div class="product-brand">${product.brand}</div>
+      </div>
+      <div class="product-expand-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+    <div class="product-variants" id="variants-${listId}-${product.id}">
+      ${product.variants.map(v => `
+        <div class="variant-row">
+          <div class="variant-swatch" style="background:${v.color};"></div>
+          <div class="variant-name">${v.name}</div>
+          <button class="variant-add-btn"
+            data-vid="${v.id}"
+            data-pname="${product.name.replace(/"/g,'&quot;')}"
+            data-vname="${v.name}"
+            data-color="${v.color}"
+            data-sizes="${v.sizes.join(',')}"
+            data-listid="${listId}"
+            data-badgeid="${badgeId}"
+            data-mcid="${mobileCountId}"
+            onclick="addToOrderlistBtn(this)">+ Voeg toe</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  return div;
+}
+
+function toggleVariants(header) {
+  const variants = header.nextElementSibling;
+  const isOpen = variants.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.product-variants.open').forEach(v => v.classList.remove('open'));
+  if (!isOpen) variants.classList.add('open');
+}
+
+function addToOrderlistBtn(btn) {
+  const d = btn.dataset;
+  const sizes = d.sizes.split(',');
+  addToOrderlist(d.vid, d.pname, d.vname, d.color, sizes, d.listid, d.badgeid, d.mcid === 'null' ? null : d.mcid);
+}
+
+function addToOrderlist(variantId, productName, variantName, color, sizesInput, listId, badgeId, mobileCountId) {
+  const sizes = Array.isArray(sizesInput) ? sizesInput : sizesInput.split(',');
+  const items = listId === 'orderlistItems' ? orderlistItems : orderlistItems2;
+  if (items.find(i => i.variantId === variantId)) {
+    showToast(variantName + ' staat al in de lijst', 'info');
+    return;
+  }
+
+  items.push({
+    variantId, productName, variantName, color,
+    sizes: sizes,
+    selectedSizes: sizes.slice(0, Math.min(3, sizes.length))
+  });
+
+  renderOrderlistItems(listId, items, badgeId);
+  if (mobileCountId && document.getElementById(mobileCountId)) {
+    document.getElementById(mobileCountId).textContent = items.length;
+  }
+  showToast(productName + ' — ' + variantName + ' toegevoegd', 'success');
+}
+
+function renderOrderlistItems(listId, items, badgeId) {
+  const container = document.getElementById(listId);
+  const empty = document.getElementById(listId.replace('Items', 'Empty'));
+
+  if (!container) return;
+
+  if (items.length === 0) {
+    if (empty) empty.style.display = 'block';
+    container.innerHTML = '';
+    if (badgeId && document.getElementById(badgeId)) document.getElementById(badgeId).textContent = '0 items';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  if (badgeId && document.getElementById(badgeId)) {
+    document.getElementById(badgeId).textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
+  }
+
+  container.innerHTML = '';
+  items.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.draggable = true;
+    div.dataset.idx = idx;
+    div.addEventListener('dragstart', (e) => { dragSrcIdx = idx; div.classList.add('dragging'); });
+    div.addEventListener('dragend', () => { div.classList.remove('dragging'); document.querySelectorAll('.order-item').forEach(i => i.classList.remove('drag-over')); });
+    div.addEventListener('dragover', (e) => { e.preventDefault(); div.classList.add('drag-over'); });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', (e) => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+        const arr = listId === 'orderlistItems' ? orderlistItems : orderlistItems2;
+        const [moved] = arr.splice(dragSrcIdx, 1);
+        arr.splice(idx, 0, moved);
+        renderOrderlistItems(listId, arr, badgeId);
+      }
+    });
+
+    const sizesHtml = item.sizes.map(s =>
+      `<span class="size-chip ${item.selectedSizes.includes(s) ? 'checked' : ''}" onclick="toggleSize(this,'${item.variantId}','${s}','${listId}')">${s}</span>`
+    ).join('');
+
+    div.innerHTML = `
+      <div class="drag-handle">
+        <svg width="12" height="16" viewBox="0 0 10 16" fill="none"><circle cx="3" cy="2" r="1.5" fill="currentColor"/><circle cx="7" cy="2" r="1.5" fill="currentColor"/><circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="7" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="10" r="1.5" fill="currentColor"/><circle cx="7" cy="10" r="1.5" fill="currentColor"/><circle cx="3" cy="14" r="1.5" fill="currentColor"/><circle cx="7" cy="14" r="1.5" fill="currentColor"/></svg>
+      </div>
+      <div class="order-item-thumb" style="display:flex;align-items:center;justify-content:center;">
+        <div style="width:100%;height:100%;background:${item.color};opacity:0.7;border-radius:4px;"></div>
+      </div>
+      <div class="order-item-info">
+        <div class="order-item-name">${item.productName}</div>
+        <div class="order-item-meta">${item.variantName}</div>
+        <div class="order-item-sizes">${sizesHtml}</div>
+      </div>
+      <button class="order-item-remove" onclick="removeFromOrderlist('${item.variantId}','${listId}','${badgeId}')" title="Verwijder">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleSize(el, variantId, size, listId) {
+  const items = listId === 'orderlistItems' ? orderlistItems : orderlistItems2;
+  const item = items.find(i => i.variantId === variantId);
+  if (!item) return;
+  const idx = item.selectedSizes.indexOf(size);
+  if (idx > -1) item.selectedSizes.splice(idx, 1);
+  else item.selectedSizes.push(size);
+  el.classList.toggle('checked');
+}
+
+function removeFromOrderlist(variantId, listId, badgeId) {
+  if (listId === 'orderlistItems') {
+    const idx = orderlistItems.findIndex(i => i.variantId === variantId);
+    if (idx > -1) orderlistItems.splice(idx, 1);
+    renderOrderlistItems(listId, orderlistItems, badgeId);
+    const mc = document.getElementById('mobileOrderCount');
+    if (mc) mc.textContent = orderlistItems.length;
+  } else {
+    const idx = orderlistItems2.findIndex(i => i.variantId === variantId);
+    if (idx > -1) orderlistItems2.splice(idx, 1);
+    renderOrderlistItems(listId, orderlistItems2, badgeId);
+  }
+}
+
+function filterProducts(val) {
+  const q = val.toLowerCase();
+  renderFilteredProducts('productSearchResults', q, 'orderlistItems', orderlistItems, 'orderlistCountBadge', 'mobileOrderCount');
+}
+function filterProducts2(val) {
+  const q = val.toLowerCase();
+  renderFilteredProducts('productSearchResults2', q, 'orderlistItems2', orderlistItems2, 'orderlistCountBadge2', null);
+}
+
+function renderFilteredProducts(containerId, q, listId, items, badgeId, mobileCountId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  const filtered = PRODUCTS.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.brand.toLowerCase().includes(q) ||
+    p.variants.some(v => v.name.toLowerCase().includes(q))
+  );
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Geen producten gevonden</p></div>';
+    return;
+  }
+  filtered.forEach(p => {
+    const el = createProductItem(p, listId, items, badgeId, mobileCountId);
+    container.appendChild(el);
+  });
+}
+
+function renderOrderlist2() {
+  renderOrderlistItems('orderlistItems2', orderlistItems2, 'orderlistCountBadge2');
+}
+
+// ===== ORDER STATUS =====
+function changeOrderStatus(select, rowId) {
+  showToast('Status gewijzigd naar: ' + select.value, 'success');
+}
+
+function changeDetailStatus(select) {
+  const badge = document.getElementById('orderStatusBadge');
+  badge.className = 'badge';
+  badge.textContent = select.value;
+  if (select.value === 'Nieuw') { badge.classList.add('badge-new', 'badge-dot'); }
+  else if (select.value === 'In behandeling') { badge.classList.add('badge-processing', 'badge-dot'); }
+  else { badge.classList.add('badge-done', 'badge-dot'); }
+  showToast('Status gewijzigd naar: ' + select.value, 'success');
+}
+
+// ===== TOAST =====
+function showToast(msg, type) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type || 'info'}`;
+  const icons = {
+    success: '✓', error: '✕', info: 'ℹ'
+  };
+  toast.innerHTML = `<span style="font-size:16px;">${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.transition = 'opacity 0.3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ===== CUSTOMER FILTER =====
+function filterCustomers(val) {
+  const q = val.toLowerCase();
+  document.querySelectorAll('#customersTable tbody tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+function filterCustomerStatus(val) {
+  document.querySelectorAll('#customersTable tbody tr').forEach(row => {
+    if (!val) { row.style.display = ''; return; }
+    const status = row.querySelector('.badge')?.textContent.trim().toLowerCase();
+    row.style.display = (status === val) ? '' : 'none';
+  });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderProductSearch('productSearchResults', 'orderlistItems', orderlistItems, 'orderlistCountBadge', 'mobileOrderCount');
+
+  // URL hash navigation for direct access
+  const hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById('screen-' + hash)) {
+    navigateTo(hash);
+  }
+
+  // Demo: pre-fill wizard from URL param ?demo=1
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('demo') === 'wizard2') {
+    navigateTo('create-customer');
+    selectGrippOrg('Acme BV', 'Amsterdam', 'info@acme-bv.nl', '10234');
+    goToWizardStep(2);
+  }
+});
+</script>
+</body>
+</html>

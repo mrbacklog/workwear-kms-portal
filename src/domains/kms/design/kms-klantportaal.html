@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KMS Bestelportaal — Van Kruiningen Reklame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --orange:       #F18E00;
+      --orange-dark:  #D97E00;
+      --orange-light: #FFF4E0;
+      --cyan:         #00A0C8;
+      --cyan-dark:    #0090B5;
+      --cyan-light:   #E0F5FB;
+      --green:        #008838;
+      --green-light:  #E0F5EC;
+      --black:        #0A0A0A;
+      --grey-900:     #1A1A1A;
+      --grey-700:     #444444;
+      --grey-500:     #888888;
+      --grey-300:     #CCCCCC;
+      --grey-100:     #F5F5F5;
+      --grey-50:      #FAFAFA;
+      --white:        #FFFFFF;
+
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  18px;
+      --radius-xl:  24px;
+      --radius-full: 999px;
+
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,0.14);
+      --shadow-xl:  0 20px 60px rgba(0,0,0,0.18);
+
+      --transition-fast:   150ms ease;
+      --transition-normal: 250ms ease;
+      --transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input, textarea { font-family: inherit; }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    /* ===== SCREEN MANAGEMENT ===== */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ===== VK LOGO ===== */
+    .vk-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      cursor: pointer;
+      -webkit-user-select: none;
+    }
+    .vk-logo-mark {
+      width: 44px;
+      height: 44px;
+      background: var(--black);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vk-logo-mark::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--orange);
+    }
+    .vk-logo-mark svg {
+      width: 26px;
+      height: 26px;
+    }
+    .vk-logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--grey-700);
+      line-height: 1.2;
+    }
+    .vk-logo-text span {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--grey-500);
+    }
+
+    /* ===== BOLUS MODE ===== */
+    body.bolus-mode {
+      --orange: #FF6B00;
+    }
+    body.bolus-mode .vk-logo-mark {
+      background: #2D5016;
+    }
+    .bolus-badge {
+      display: none;
+      background: var(--orange);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    body.bolus-mode .bolus-badge { display: inline-block; }
+
+    /* ===== COUNTDOWN OVERLAY ===== */
+    #countdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #countdown-overlay.active { display: flex; }
+    .countdown-number {
+      font-size: 140px;
+      font-weight: 900;
+      color: var(--orange);
+      line-height: 1;
+      animation: countdown-pulse 1s ease-in-out;
+    }
+    .countdown-hint {
+      font-size: 16px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 16px;
+      font-weight: 400;
+    }
+    @keyframes countdown-pulse {
+      0% { transform: scale(1.5); opacity: 0; }
+      20% { transform: scale(1); opacity: 1; }
+      80% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+
+    /* Bolus reveal flash + shake */
+    @keyframes bolus-flash {
+      0% { background: var(--white); }
+      20% { background: var(--orange); }
+      40% { background: var(--white); }
+      60% { background: var(--orange); }
+      100% { background: var(--white); }
+    }
+    @keyframes bolus-shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 50%, 90% { transform: translateX(-6px); }
+      30%, 70% { transform: translateX(6px); }
+    }
+    body.bolus-flash { animation: bolus-flash 600ms ease-out; }
+    body.bolus-shake { animation: bolus-shake 500ms ease-out; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--orange);
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(241,142,0,0.35);
+    }
+    .btn-primary:hover {
+      background: var(--orange-dark);
+      box-shadow: 0 6px 20px rgba(241,142,0,0.45);
+    }
+    .btn-secondary {
+      background: var(--grey-100);
+      color: var(--grey-700);
+    }
+    .btn-secondary:hover { background: var(--grey-300); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--cyan);
+      padding: 8px 0;
+    }
+    .btn-ghost:hover { color: var(--cyan-dark); }
+    .btn-full { width: 100%; }
+    .btn-lg { padding: 18px 36px; font-size: 17px; border-radius: var(--radius-lg); }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey-700);
+      letter-spacing: 0.3px;
+    }
+    .form-input {
+      padding: 14px 16px;
+      border: 1.5px solid var(--grey-300);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      color: var(--black);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      background: var(--white);
+      outline: none;
+      width: 100%;
+    }
+    .form-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0,160,200,0.15);
+    }
+    .form-input::placeholder { color: var(--grey-400, #AAAAAA); }
+    textarea.form-input { resize: vertical; min-height: 100px; }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+      position: relative;
+    }
+    .search-bar-input {
+      padding: 14px 16px 14px 48px;
+      border: 1.5px solid var(--grey-200, #E8E8E8);
+      border-radius: var(--radius-xl);
+      font-size: 15px;
+      width: 100%;
+      background: var(--grey-50);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+    .search-bar-input:focus {
+      background: var(--white);
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0,160,200,0.12);
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--grey-400, #AAAAAA);
+      pointer-events: none;
+    }
+    .search-clear {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--grey-300);
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--grey-700);
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+    .search-bar-input:not(:placeholder-shown) + .search-icon + .search-clear,
+    .search-bar-input:not(:placeholder-shown) ~ .search-clear { opacity: 1; }
+
+    /* ===== BADGE ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-orange { background: var(--orange); color: var(--white); }
+    .badge-cyan { background: var(--cyan); color: var(--white); }
+    .badge-green { background: var(--green); color: var(--white); }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      height: 1px;
+      background: var(--grey-100);
+      margin: 0;
+    }
+
+    /* =======================================================
+       SCREEN 1: LANDING / MAGIC LINK
+       ======================================================= */
+    #screen-landing {
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: var(--white);
+    }
+    .landing-inner {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .landing-logo-wrap {
+      margin-bottom: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .landing-logo-mark {
+      width: 80px;
+      height: 80px;
+      background: var(--black);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .landing-logo-mark::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--orange), var(--cyan));
+    }
+    .landing-logo-mark svg {
+      width: 48px;
+      height: 48px;
+    }
+    .landing-brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--grey-500);
+      letter-spacing: 0.5px;
+    }
+    .landing-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--black);
+      text-align: center;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+    .landing-subtitle {
+      font-size: 15px;
+      color: var(--grey-500);
+      text-align: center;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+    .landing-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .landing-success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      padding: 32px;
+      background: var(--green-light);
+      border-radius: var(--radius-xl);
+      border: 1.5px solid rgba(0,136,56,0.2);
+      width: 100%;
+    }
+    .landing-success.active { display: flex; }
+    .landing-success-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .landing-success h3 {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .landing-success p {
+      font-size: 14px;
+      color: var(--grey-700);
+      line-height: 1.6;
+    }
+    .landing-footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: var(--grey-400, #AAAAAA);
+      text-align: center;
+    }
+
+    /* =======================================================
+       SCREEN 2: ORDER FORM
+       ======================================================= */
+    #screen-order {
+      background: var(--grey-50);
+      flex-direction: column;
+    }
+
+    /* Order Header */
+    .order-header {
+      background: var(--white);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--grey-100);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .order-header-client {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .order-header-client-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+    }
+    .order-header-client-sub {
+      font-size: 11px;
+      color: var(--grey-500);
+    }
+
+    /* Order Search + Filters */
+    .order-search-area {
+      background: var(--white);
+      padding: 12px 20px 16px;
+      border-bottom: 1px solid var(--grey-100);
+    }
+
+    /* Products List */
+    .products-list {
+      flex: 1;
+      padding: 16px 20px 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Section label */
+    .products-section-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey-500);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 0;
+    }
+
+    /* Product Card */
+    .product-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid transparent;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .product-card.has-selection {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(241,142,0,0.08), var(--shadow-md);
+    }
+    .product-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .product-card-header:hover { background: var(--grey-50); }
+    .product-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--grey-100);
+      overflow: hidden;
+    }
+    .product-thumb-placeholder {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .product-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+    .product-card-color {
+      font-size: 12px;
+      color: var(--grey-500);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .product-card-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey-700);
+      margin-top: 6px;
+    }
+    .product-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .product-expand-icon {
+      color: var(--grey-400, #AAAAAA);
+      transition: transform var(--transition-normal);
+    }
+    .product-card.expanded .product-expand-icon { transform: rotate(180deg); }
+    .product-selection-badge {
+      display: none;
+      background: var(--orange);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+    }
+    .product-card.has-selection .product-selection-badge { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Product Expanded Body */
+    .product-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 300ms ease-out;
+    }
+    .product-card.expanded .product-card-body { max-height: 400px; }
+    .product-card-body-inner {
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--grey-100);
+    }
+
+    /* Size Selector */
+    .size-selector {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 14px 0 8px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .size-selector::-webkit-scrollbar { display: none; }
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .size-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey-700);
+      min-width: 44px;
+      text-align: center;
+      padding: 6px;
+      background: var(--grey-100);
+      border-radius: var(--radius-sm);
+    }
+    .size-counter {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .counter-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .counter-minus {
+      background: var(--grey-100);
+      color: var(--grey-700);
+    }
+    .counter-minus:hover:not([disabled]) { background: var(--grey-300); }
+    .counter-minus[disabled] { opacity: 0.3; cursor: not-allowed; }
+    .counter-plus {
+      background: var(--orange);
+      color: white;
+      box-shadow: 0 2px 8px rgba(241,142,0,0.35);
+    }
+    .counter-plus:hover { background: var(--orange-dark); }
+    .counter-value {
+      width: 28px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--black);
+    }
+    @keyframes counter-bounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .counter-value.bounce { animation: counter-bounce 150ms ease-out; }
+
+    /* Product Card Subtotal */
+    .product-subtotal {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0 2px;
+      border-top: 1px dashed var(--grey-100);
+      margin-top: 8px;
+    }
+    .product-subtotal-label {
+      font-size: 12px;
+      color: var(--grey-500);
+    }
+    .product-subtotal-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--orange);
+    }
+    .product-detail-link {
+      font-size: 12px;
+      color: var(--cyan);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 10px;
+    }
+    .product-detail-link:hover { color: var(--cyan-dark); }
+
+    /* ===== STICKY CART FOOTER ===== */
+    .cart-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      padding: 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      background: var(--white);
+      border-top: 1px solid var(--grey-100);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.10);
+    }
+    .cart-footer-inner {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .cart-footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--orange);
+      color: var(--white);
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(241,142,0,0.4);
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      width: 100%;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .cart-footer-btn.has-items {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .cart-footer-btn:hover.has-items {
+      background: var(--orange-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(241,142,0,0.5);
+    }
+    .cart-footer-btn:active { transform: scale(0.98); }
+    .cart-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cart-icon {
+      position: relative;
+    }
+    .cart-count-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--black);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cart-footer-total {
+      font-size: 17px;
+      font-weight: 800;
+    }
+    @keyframes total-update {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    .cart-footer-total.updating { animation: total-update 200ms ease-out; }
+
+    /* =======================================================
+       SCREEN 3: PRODUCT DETAIL (slide-in panel)
+       ======================================================= */
+    #panel-product-detail {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      pointer-events: none;
+    }
+    #panel-product-detail.active { pointer-events: auto; }
+    .panel-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background 350ms ease;
+    }
+    #panel-product-detail.active .panel-backdrop {
+      background: rgba(0,0,0,0.45);
+    }
+    .panel-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      max-height: 92vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
+      scrollbar-width: none;
+    }
+    .panel-sheet::-webkit-scrollbar { display: none; }
+    #panel-product-detail.active .panel-sheet { transform: translateY(0); }
+
+    /* Desktop: slide in from right */
+    @media (min-width: 768px) {
+      .panel-sheet {
+        left: auto;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 440px;
+        border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        max-height: 100vh;
+        transform: translateX(100%);
+      }
+      #panel-product-detail.active .panel-sheet { transform: translateX(0); }
+    }
+
+    .panel-drag-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--grey-300);
+      border-radius: var(--radius-full);
+      margin: 14px auto 0;
+    }
+    @media (min-width: 768px) {
+      .panel-drag-handle { display: none; }
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 1;
+      border-bottom: 1px solid var(--grey-100);
+    }
+    .panel-close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--grey-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--grey-700);
+      font-size: 16px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .panel-close-btn:hover { background: var(--grey-300); }
+    .panel-product-image {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: var(--grey-100);
+    }
+    .panel-product-image-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+    }
+    .panel-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel-brand {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .panel-product-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1.2;
+    }
+    .panel-color-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--grey-600, #666);
+    }
+    .panel-color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.12);
+    }
+    .panel-price-tag {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .panel-price-label {
+      font-size: 12px;
+      color: var(--grey-500);
+      font-weight: 500;
+    }
+    .panel-price-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--orange);
+    }
+    .panel-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .panel-info-item {
+      background: var(--grey-50);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+    .panel-info-item-label {
+      font-size: 11px;
+      color: var(--grey-500);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .panel-info-item-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+    }
+    .panel-sizes-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .panel-sizes-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .panel-size-chip {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--grey-100);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey-700);
+    }
+    .panel-description {
+      font-size: 14px;
+      color: var(--grey-600, #666);
+      line-height: 1.7;
+    }
+
+    /* =======================================================
+       SCREEN 4: ORDER CONFIRMATION (slide-up)
+       ======================================================= */
+    #panel-confirmation {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      pointer-events: none;
+    }
+    #panel-confirmation.active { pointer-events: auto; }
+    .confirm-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background 400ms ease;
+    }
+    #panel-confirmation.active .confirm-backdrop {
+      background: rgba(0,0,0,0.5);
+    }
+    .confirm-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      max-height: 95vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+      scrollbar-width: none;
+    }
+    .confirm-sheet::-webkit-scrollbar { display: none; }
+    #panel-confirmation.active .confirm-sheet { transform: translateY(0); }
+
+    @media (min-width: 768px) {
+      .confirm-sheet {
+        max-width: 560px;
+        left: 50%;
+        bottom: auto;
+        top: 50%;
+        transform: translate(-50%, 50vh);
+        border-radius: var(--radius-xl);
+        max-height: 90vh;
+      }
+      #panel-confirmation.active .confirm-sheet {
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .confirm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--grey-100);
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 1;
+    }
+    .confirm-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .confirm-body {
+      padding: 20px;
+    }
+    .confirm-order-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1.5px solid var(--grey-100);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .confirm-line {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--grey-100);
+    }
+    .confirm-line:last-child { border-bottom: none; }
+    .confirm-line-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--black);
+      line-height: 1.3;
+    }
+    .confirm-line-meta {
+      font-size: 11px;
+      color: var(--grey-500);
+      margin-top: 2px;
+    }
+    .confirm-line-qty {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey-700);
+      text-align: center;
+      min-width: 32px;
+    }
+    .confirm-line-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--black);
+      text-align: right;
+    }
+    .confirm-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .confirm-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--grey-50);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      border: 1.5px solid var(--grey-100);
+    }
+    .confirm-total-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--grey-700);
+    }
+    .confirm-total-amount {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--orange);
+    }
+    .confirm-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 0 20px 28px;
+    }
+    .confirm-cancel-link {
+      text-align: center;
+      font-size: 14px;
+      color: var(--grey-500);
+      cursor: pointer;
+      padding: 8px;
+    }
+    .confirm-cancel-link:hover { color: var(--grey-700); }
+
+    /* =======================================================
+       SCREEN 5: SUCCESS
+       ======================================================= */
+    #screen-success {
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+    .success-inner {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .success-icon-wrap {
+      width: 96px;
+      height: 96px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .success-icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      opacity: 0.3;
+    }
+    .success-checkmark {
+      animation: checkmark-draw 600ms ease-out 200ms both;
+    }
+    @keyframes checkmark-draw {
+      0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+      60% { transform: scale(1.15) rotate(5deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .success-heading {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--black);
+      margin-bottom: 8px;
+    }
+    .success-order-number {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--grey-100);
+      border-radius: var(--radius-full);
+      padding: 8px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--grey-700);
+      margin-bottom: 20px;
+    }
+    .success-order-number span { color: var(--orange); }
+    .success-message {
+      font-size: 15px;
+      color: var(--grey-500);
+      line-height: 1.7;
+      margin-bottom: 40px;
+      max-width: 300px;
+    }
+    .success-new-order-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--cyan);
+      cursor: pointer;
+      padding: 12px 24px;
+      border: 1.5px solid var(--cyan);
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+    }
+    .success-new-order-link:hover {
+      background: var(--cyan-light);
+    }
+
+    /* Confetti */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* =======================================================
+       BOLUS MODE text replacements
+       ======================================================= */
+    [data-bolus] { transition: opacity 200ms; }
+
+    /* =======================================================
+       FLOATING NAV BAR (Dev prototype only)
+       ======================================================= */
+    #dev-nav {
+      position: fixed;
+      bottom: 100px;
+      left: 12px;
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dev-nav-toggle {
+      width: 40px;
+      height: 40px;
+      background: var(--black);
+      color: white;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: var(--shadow-md);
+    }
+    #dev-nav-menu {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--black);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      box-shadow: var(--shadow-xl);
+    }
+    #dev-nav-menu.open { display: flex; }
+    .dev-nav-item {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--transition-fast);
+    }
+    .dev-nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+    .dev-nav-item.active { color: var(--orange); }
+
+    /* =======================================================
+       RESPONSIVE — DESKTOP
+       ======================================================= */
+    @media (min-width: 768px) {
+      .products-list {
+        padding-left: 0;
+        padding-right: 0;
+      }
+      .order-header, .order-search-area {
+        padding-left: 40px;
+        padding-right: 40px;
+      }
+      .products-list {
+        padding: 24px 40px 140px;
+        max-width: 100%;
+      }
+      .landing-title { font-size: 34px; }
+    }
+
+    @media (min-width: 1024px) {
+      .products-list {
+        max-width: 720px;
+        padding: 24px 0 140px;
+        margin: 0 auto;
+      }
+      .order-header-inner, .order-search-inner {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0;
+      }
+      .order-header, .order-search-area {
+        padding-left: 40px;
+        padding-right: 40px;
+      }
+      .cart-footer-inner {
+        max-width: 720px;
+      }
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--grey-300); border-radius: 2px; }
+
+    /* Animations */
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fade-in 400ms ease-out both; }
+
+    /* BOLUS INDICATOR */
+    .bolus-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--orange);
+      color: white;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      z-index: 8000;
+      display: none;
+      animation: fade-in 300ms ease;
+    }
+    body.bolus-mode .bolus-indicator { display: block; }
+
+    /* LONG PRESS INDICATOR on logo */
+    .vk-logo-mark .press-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 3px solid var(--orange);
+      transform: scale(0);
+      opacity: 0;
+      transition: none;
+    }
+    .vk-logo-mark.pressing .press-ring {
+      transform: scale(1.3);
+      opacity: 0.6;
+      transition: transform 3000ms linear, opacity 3000ms linear;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--grey-400, #AAAAAA);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state-text { font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== BOLUS MODE INDICATOR ===== -->
+<div class="bolus-indicator">BOLUS MODUS ACTIEF — ZEEUWS DIALECT</div>
+
+<!-- ===== DEV NAV (prototype navigation) ===== -->
+<div id="dev-nav">
+  <div class="dev-nav-toggle" onclick="toggleDevNav()" title="Navigeer schermen">☰</div>
+  <div id="dev-nav-menu">
+    <div class="dev-nav-item" onclick="showScreen('landing'); closeDevNav()">1. Landing</div>
+    <div class="dev-nav-item" onclick="showScreen('order'); closeDevNav()">2. Bestellen</div>
+    <div class="dev-nav-item" onclick="openProductDetail(0); closeDevNav()">3. Productdetail</div>
+    <div class="dev-nav-item" onclick="openConfirmation(); closeDevNav()">4. Bevestiging</div>
+    <div class="dev-nav-item" onclick="showScreen('success'); closeDevNav()">5. Succes</div>
+    <div class="dev-nav-item" onclick="activateBolus(); closeDevNav()">★ Bolus Modus</div>
+  </div>
+</div>
+
+<!-- ===== COUNTDOWN OVERLAY ===== -->
+<div id="countdown-overlay">
+  <div class="countdown-number" id="countdown-number">3</div>
+  <div class="countdown-hint">Hou vast... Bolus Modus laadt</div>
+</div>
+
+<!-- ===========================================================
+     SCREEN 1: LANDING
+     =========================================================== -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-inner animate-in">
+
+    <!-- Logo -->
+    <div class="landing-logo-wrap">
+      <div class="landing-logo-mark vk-logo-mark" id="landing-logo" title="Houd 3 seconden ingedrukt voor Bolus Modus">
+        <div class="press-ring"></div>
+        <svg viewBox="0 0 56 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- V -->
+          <path d="M2 6L14 34L20 34L8 6Z" fill="white"/>
+          <path d="M14 34L20 34L26 6L20 6Z" fill="#F18E00"/>
+          <!-- K -->
+          <path d="M30 6L30 34L36 34L36 22L46 34L53 34L41 20L53 6L46 6L36 18L36 6Z" fill="white"/>
+          <path d="M41 20L36 14L36 26Z" fill="#F18E00" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="landing-brand-name">Van Kruiningen Reklame</div>
+    </div>
+
+    <h1 class="landing-title" data-bolus data-normal="Welkom bij uw bestelportaal" data-bolus-text="Welkom bie uw bestelportaal">
+      Welkom bij uw bestelportaal
+    </h1>
+    <p class="landing-subtitle" data-bolus data-normal="Voer uw e-mailadres in en we sturen u een toegangslink." data-bolus-text="Doe je mail d'rin, dan sturen we je 'n link.">
+      Voer uw e-mailadres in en we sturen u een toegangslink.
+    </p>
+
+    <!-- Form -->
+    <div class="landing-form" id="landing-form">
+      <div class="form-group">
+        <label class="form-label" for="email-input" data-bolus data-normal="Uw e-mailadres" data-bolus-text="Doe je mail d'rin">
+          Uw e-mailadres
+        </label>
+        <input
+          type="email"
+          id="email-input"
+          class="form-input"
+          placeholder="naam@bedrijf.nl"
+          autocomplete="email"
+        >
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="submitMagicLink()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        <span data-bolus data-normal="Verstuur link" data-bolus-text="Stuur mar">Verstuur link</span>
+      </button>
+    </div>
+
+    <!-- Success state -->
+    <div class="landing-success" id="landing-success">
+      <div class="landing-success-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h3 data-bolus data-normal="Check uw inbox!" data-bolus-text="Kiek in je mail!">Check uw inbox!</h3>
+      <p data-bolus
+         data-normal="We hebben een toegangslink gestuurd. Klik op de link in de e-mail om in te loggen."
+         data-bolus-text="We 'ebbe 'n link gestuurd. Klik op da linkje in je mail.">
+        We hebben een toegangslink gestuurd. Klik op de link in de e-mail om in te loggen.
+      </p>
+    </div>
+
+    <!-- Demo shortcut -->
+    <div style="margin-top: 32px; text-align: center;">
+      <button class="btn btn-ghost" onclick="showScreen('order')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        Demo: Ga naar bestelformulier
+      </button>
+    </div>
+
+    <div class="landing-footer">
+      Beveiligd door Van Kruiningen Reklame &nbsp;·&nbsp; v2.4
+    </div>
+
+  </div>
+</div>
+
+<!-- ===========================================================
+     SCREEN 2: ORDER FORM
+     =========================================================== -->
+<div id="screen-order" class="screen">
+
+  <!-- Sticky Header -->
+  <header class="order-header">
+    <div class="vk-logo" id="order-logo" title="Houd 3 seconden ingedrukt voor Bolus Modus">
+      <div class="vk-logo-mark">
+        <div class="press-ring"></div>
+        <svg viewBox="0 0 56 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 6L14 34L20 34L8 6Z" fill="white"/>
+          <path d="M14 34L20 34L26 6L20 6Z" fill="#F18E00"/>
+          <path d="M30 6L30 34L36 34L36 22L46 34L53 34L41 20L53 6L46 6L36 18L36 6Z" fill="white"/>
+          <path d="M41 20L36 14L36 26Z" fill="#F18E00" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="vk-logo-text">
+        VK Portaal
+        <span>Acme B.V.</span>
+      </div>
+    </div>
+    <div class="order-header-client">
+      <div class="order-header-client-name">Acme B.V.</div>
+      <div class="order-header-client-sub">Werkkleding 2025</div>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="order-search-area">
+    <div class="search-bar">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="search"
+        class="search-bar-input"
+        id="product-search"
+        data-bolus
+        data-normal="Zoek in uw assortiment..."
+        data-bolus-text="Wa moe je 'ebbe?"
+        placeholder="Zoek in uw assortiment..."
+        oninput="filterProducts(this.value)"
+      >
+    </div>
+  </div>
+
+  <!-- Products -->
+  <div class="products-list" id="products-list">
+    <div class="products-section-label" data-bolus data-normal="Uw assortiment" data-bolus-text="Uw spullen">Uw assortiment</div>
+    <!-- Products are rendered by JS -->
+  </div>
+
+  <!-- Sticky Cart Footer -->
+  <div class="cart-footer">
+    <div class="cart-footer-inner">
+      <button class="cart-footer-btn" id="cart-footer-btn" onclick="openConfirmation()">
+        <div class="cart-footer-left">
+          <div class="cart-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <div class="cart-count-badge" id="cart-count-badge">0</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; font-weight: 500; opacity: 0.8;" id="cart-items-label" data-bolus data-normal="0 artikelen" data-bolus-text="0 stuks">0 artikelen</div>
+          </div>
+        </div>
+        <div class="cart-footer-total" id="cart-total-display">€ 0,00</div>
+        <div>
+          <span data-bolus data-normal="Bestelling bekijken" data-bolus-text="Kiek 's wa je 'eit">Bestelling bekijken</span>
+          <svg style="display:inline;margin-left:8px;vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===========================================================
+     PANEL: PRODUCT DETAIL (slide-in)
+     =========================================================== -->
+<div id="panel-product-detail" role="dialog" aria-modal="true">
+  <div class="panel-backdrop" onclick="closeProductDetail()"></div>
+  <div class="panel-sheet" id="product-detail-sheet">
+    <div class="panel-drag-handle"></div>
+    <div class="panel-header">
+      <span style="font-size: 14px; font-weight: 600; color: var(--grey-500);" data-bolus data-normal="Productdetails" data-bolus-text="Wa is dit?">Productdetails</span>
+      <button class="panel-close-btn" onclick="closeProductDetail()" aria-label="Sluiten">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="panel-detail-content">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===========================================================
+     PANEL: ORDER CONFIRMATION (slide-up)
+     =========================================================== -->
+<div id="panel-confirmation" role="dialog" aria-modal="true">
+  <div class="confirm-backdrop" onclick="closeConfirmation()"></div>
+  <div class="confirm-sheet">
+    <div class="drag-handle" style="width:40px;height:4px;background:var(--grey-300);border-radius:999px;margin:14px auto 0;"></div>
+    <div class="confirm-header">
+      <h2 data-bolus data-normal="Bestelling bevestigen" data-bolus-text="Kiek 's na">Bestelling bevestigen</h2>
+      <button class="panel-close-btn" onclick="closeConfirmation()" aria-label="Sluiten">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="confirm-body">
+      <!-- Order lines filled by JS -->
+      <div id="confirm-order-lines-wrap"></div>
+
+      <!-- Total -->
+      <div class="confirm-total-row">
+        <span class="confirm-total-label" data-bolus data-normal="Totaalbedrag" data-bolus-text="Alles sao'n">Totaalbedrag</span>
+        <span class="confirm-total-amount" id="confirm-total-amount">€ 0,00</span>
+      </div>
+
+      <!-- Fields -->
+      <div class="confirm-fields">
+        <div class="form-group">
+          <label class="form-label" for="confirm-reference" data-bolus data-normal="Referentie (optioneel)" data-bolus-text="Hoe noemen we da?">
+            Referentie (optioneel)
+          </label>
+          <input type="text" id="confirm-reference" class="form-input" placeholder="bijv. Nieuwe medewerkers Q1">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm-notes" data-bolus data-normal="Opmerkingen (optioneel)" data-bolus-text="Nog iets te zegge?">
+            Opmerkingen (optioneel)
+          </label>
+          <textarea id="confirm-notes" class="form-input" placeholder="Bijv. levering op vrijdag"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-primary btn-full btn-lg" onclick="placeOrder()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span data-bolus data-normal="Bestelling plaatsen" data-bolus-text="Bestel mao!">Bestelling plaatsen</span>
+      </button>
+      <div class="confirm-cancel-link" onclick="closeConfirmation()" data-bolus data-normal="Annuleren, ga terug" data-bolus-text="Nee laat maar">
+        Annuleren, ga terug
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================================================
+     SCREEN 5: SUCCESS
+     =========================================================== -->
+<div id="screen-success" class="screen">
+  <canvas id="confetti-canvas"></canvas>
+  <div class="success-inner animate-in">
+    <div class="success-icon-wrap">
+      <svg class="success-checkmark" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#008838" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h1 class="success-heading" data-bolus data-normal="Bestelling geplaatst!" data-bolus-text="'t Is geregeld!">
+      Bestelling geplaatst!
+    </h1>
+    <div class="success-order-number">
+      Ordernummer <span>#0042</span>
+    </div>
+    <p class="success-message" data-bolus data-normal="U ontvangt een bevestiging per e-mail. Uw werkkleding wordt zo snel mogelijk verwerkt." data-bolus-text="Je kriegt 'n bevestiginkje in je mail. Je kliere komme der ao.">
+      U ontvangt een bevestiging per e-mail. Uw werkkleding wordt zo snel mogelijk verwerkt.
+    </p>
+    <div
+      class="success-new-order-link"
+      onclick="startNewOrder()"
+      data-bolus
+      data-normal="+ Nieuwe bestelling"
+      data-bolus-text="+ Nog 'n keer bestelle"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nieuwe bestelling
+    </div>
+
+    <div style="margin-top: 24px;">
+      <button class="btn btn-ghost" onclick="showScreen('landing')" style="color: var(--grey-400);">
+        Terug naar startpagina
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================================================
+     JAVASCRIPT
+     =========================================================== -->
+<script>
+/* =============================================================
+   DATA
+   ============================================================= */
+const PRODUCTS = [
+  {
+    id: 1,
+    name: 'Mascot Accelerate Werkjas',
+    brand: 'Mascot',
+    color: 'Navy',
+    colorHex: '#1a2e5a',
+    price: 89.95,
+    sizes: ['S','M','L','XL','2XL'],
+    emoji: '🧥',
+    bg: '#E8EDF5',
+    description: 'Duurzame werkjas met stretch-panels voor maximale bewegingsvrijheid. Waterafstotende coating, meerdere functionele zakken.',
+    material: '65% Polyester, 35% Katoen',
+    weight: '320 g/m²',
+    article: 'ACC-1070-010-010',
+  },
+  {
+    id: 2,
+    name: 'Mascot Accelerate Werkjas',
+    brand: 'Mascot',
+    color: 'Rood/Zwart',
+    colorHex: '#CC2222',
+    price: 89.95,
+    sizes: ['S','M','L','XL','2XL'],
+    emoji: '🧥',
+    bg: '#F5E8E8',
+    description: 'Zichtbaar en veilig. Twee-tone werkjas met high-visibility accenten. Ideaal voor buitenwerk.',
+    material: '65% Polyester, 35% Katoen',
+    weight: '320 g/m²',
+    article: 'ACC-1070-020-010',
+  },
+  {
+    id: 3,
+    name: 'Tricorp Poloshirt 202703',
+    brand: 'Tricorp',
+    color: 'Wit',
+    colorHex: '#FFFFFF',
+    price: 34.50,
+    sizes: ['S','M','L','XL','2XL','3XL'],
+    emoji: '👕',
+    bg: '#F0F0F0',
+    description: 'Klassiek poloshirt van comfortabel piqué materiaal. Uitstekend geschikt voor borduren of bedrukken met uw bedrijfslogo.',
+    material: '100% Katoen piqué',
+    weight: '220 g/m²',
+    article: 'TRI-202703-000',
+  },
+  {
+    id: 4,
+    name: 'Tricorp Werkbroek 502005',
+    brand: 'Tricorp',
+    color: 'Donkergrijs',
+    colorHex: '#444444',
+    price: 67.95,
+    sizes: ['46','48','50','52','54','56'],
+    emoji: '👖',
+    bg: '#EBEBEB',
+    description: 'Robuuste werkbroek met kniebeschermers, hamerlus en knitstof stretch-inzetten. Ergonomische pasvorm voor de hele werkdag.',
+    material: '65% Polyester, 35% Katoen Rip-Stop',
+    weight: '240 g/m²',
+    article: 'TRI-502005-058',
+  },
+  {
+    id: 5,
+    name: 'Emma Frontier Veiligheidsschoen',
+    brand: 'Emma',
+    color: 'Zwart',
+    colorHex: '#111111',
+    price: 124.95,
+    sizes: ['38','39','40','41','42','43','44','45','46'],
+    emoji: '👟',
+    bg: '#EBEBEB',
+    description: 'S3 veiligheidsschoen met stalen neus en doorslagbeveiliging. GORE-TEX® waterdicht membraan, ESD-gecertificeerd.',
+    material: 'Volledig grain leder',
+    weight: null,
+    article: 'EMM-FRON-BLK',
+  },
+];
+
+/* =============================================================
+   STATE
+   ============================================================= */
+// cart[productId][size] = quantity
+const cart = {};
+let bolusMode = false;
+
+/* =============================================================
+   SCREEN NAVIGATION
+   ============================================================= */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) {
+    el.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  if (name === 'success') {
+    startConfetti();
+  }
+}
+
+/* =============================================================
+   DEV NAV
+   ============================================================= */
+function toggleDevNav() {
+  document.getElementById('dev-nav-menu').classList.toggle('open');
+}
+function closeDevNav() {
+  document.getElementById('dev-nav-menu').classList.remove('open');
+}
+
+/* =============================================================
+   MAGIC LINK
+   ============================================================= */
+function submitMagicLink() {
+  const email = document.getElementById('email-input').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('email-input').focus();
+    document.getElementById('email-input').style.borderColor = '#FF4444';
+    setTimeout(() => document.getElementById('email-input').style.borderColor = '', 1500);
+    return;
+  }
+  document.getElementById('landing-form').style.opacity = '0';
+  document.getElementById('landing-form').style.transform = 'translateY(-8px)';
+  document.getElementById('landing-form').style.transition = 'all 300ms ease';
+  setTimeout(() => {
+    document.getElementById('landing-form').style.display = 'none';
+    document.getElementById('landing-success').classList.add('active');
+  }, 300);
+}
+
+/* =============================================================
+   RENDER PRODUCTS
+   ============================================================= */
+function renderProducts(filter = '') {
+  const list = document.getElementById('products-list');
+  const label = list.querySelector('.products-section-label');
+
+  // Remove existing cards
+  list.querySelectorAll('.product-card').forEach(c => c.remove());
+  const emptyEl = list.querySelector('.empty-state');
+  if (emptyEl) emptyEl.remove();
+
+  const filtered = PRODUCTS.filter(p =>
+    (p.name + ' ' + p.brand + ' ' + p.color).toLowerCase().includes(filter.toLowerCase())
+  );
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `<div class="empty-state-icon">🔍</div><div class="empty-state-text">Geen producten gevonden voor "${filter}"</div>`;
+    list.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(product => {
+    const card = createProductCard(product);
+    list.appendChild(card);
+  });
+
+  // Apply bolus text to new elements if bolus mode is on
+  if (bolusMode) applyBolusText();
+}
+
+function createProductCard(product) {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  card.id = 'product-card-' + product.id;
+
+  const qty = getProductTotalQty(product.id);
+  if (qty > 0) card.classList.add('has-selection');
+
+  const subtotal = getProductSubtotal(product.id);
+
+  card.innerHTML = `
+    <div class="product-card-header" onclick="toggleProductCard(${product.id})">
+      <div class="product-thumb-placeholder" style="background:${product.bg};">
+        <span style="font-size:32px;">${product.emoji}</span>
+      </div>
+      <div class="product-card-info">
+        <div class="product-card-name">${product.name}</div>
+        <div class="product-card-color">
+          <div class="color-dot" style="background:${product.colorHex};"></div>
+          ${product.color}
+        </div>
+        <div class="product-card-price">vanaf €${product.price.toFixed(2).replace('.',',')}</div>
+      </div>
+      <div class="product-card-right">
+        <div class="product-selection-badge" id="badge-${product.id}">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          ${qty}x
+        </div>
+        <svg class="product-expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+    <div class="product-card-body">
+      <div class="product-card-body-inner">
+        <div class="size-selector" id="sizes-${product.id}">
+          ${product.sizes.map(size => `
+            <div class="size-item">
+              <div class="size-label">${size}</div>
+              <div class="size-counter">
+                <button class="counter-btn counter-minus" onclick="updateQty(${product.id},'${size}',-1)" id="minus-${product.id}-${size}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <div class="counter-value" id="qty-${product.id}-${size}">
+                  ${getQty(product.id, size)}
+                </div>
+                <button class="counter-btn counter-plus" onclick="updateQty(${product.id},'${size}',1)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="product-subtotal" id="subtotal-${product.id}" style="${subtotal > 0 ? '' : 'opacity:0;'}">
+          <span class="product-subtotal-label" data-bolus data-normal="Subtotaal dit product" data-bolus-text="Dit kost da">Subtotaal dit product</span>
+          <span class="product-subtotal-value" id="subtotal-val-${product.id}">€${subtotal.toFixed(2).replace('.',',')}</span>
+        </div>
+        <div class="product-detail-link" onclick="openProductDetail(${product.id - 1})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span data-bolus data-normal="Productdetails bekijken" data-bolus-text="Mer over dis">Productdetails bekijken</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+function toggleProductCard(productId) {
+  const card = document.getElementById('product-card-' + productId);
+  card.classList.toggle('expanded');
+}
+
+/* =============================================================
+   CART LOGIC
+   ============================================================= */
+function getQty(productId, size) {
+  return (cart[productId] && cart[productId][size]) || 0;
+}
+
+function getProductTotalQty(productId) {
+  if (!cart[productId]) return 0;
+  return Object.values(cart[productId]).reduce((a, b) => a + b, 0);
+}
+
+function getProductSubtotal(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return 0;
+  return getProductTotalQty(productId) * product.price;
+}
+
+function getTotalQty() {
+  let total = 0;
+  Object.values(cart).forEach(sizes => {
+    Object.values(sizes).forEach(qty => total += qty);
+  });
+  return total;
+}
+
+function getTotalAmount() {
+  let total = 0;
+  PRODUCTS.forEach(product => {
+    total += getProductSubtotal(product.id);
+  });
+  return total;
+}
+
+function updateQty(productId, size, delta) {
+  if (!cart[productId]) cart[productId] = {};
+  const current = cart[productId][size] || 0;
+  const newVal = Math.max(0, current + delta);
+  cart[productId][size] = newVal;
+
+  // Update counter display with bounce
+  const counterEl = document.getElementById(`qty-${productId}-${size}`);
+  if (counterEl) {
+    counterEl.textContent = newVal;
+    counterEl.classList.remove('bounce');
+    void counterEl.offsetWidth; // reflow
+    counterEl.classList.add('bounce');
+    counterEl.addEventListener('animationend', () => counterEl.classList.remove('bounce'), { once: true });
+  }
+
+  // Update minus button disabled
+  const minusBtn = document.getElementById(`minus-${productId}-${size}`);
+  if (minusBtn) {
+    if (newVal === 0) minusBtn.setAttribute('disabled', '');
+    else minusBtn.removeAttribute('disabled');
+  }
+
+  // Update product card state
+  const totalQty = getProductTotalQty(productId);
+  const card = document.getElementById('product-card-' + productId);
+  const badge = document.getElementById('badge-' + productId);
+  if (card) {
+    if (totalQty > 0) {
+      card.classList.add('has-selection');
+    } else {
+      card.classList.remove('has-selection');
+    }
+  }
+  if (badge) {
+    badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${totalQty}x`;
+  }
+
+  // Update subtotal
+  const subtotal = getProductSubtotal(productId);
+  const subtotalRow = document.getElementById(`subtotal-${productId}`);
+  const subtotalVal = document.getElementById(`subtotal-val-${productId}`);
+  if (subtotalRow) subtotalRow.style.opacity = subtotal > 0 ? '1' : '0';
+  if (subtotalVal) subtotalVal.textContent = '€' + subtotal.toFixed(2).replace('.', ',');
+
+  // Update cart footer
+  updateCartFooter();
+}
+
+function updateCartFooter() {
+  const qty = getTotalQty();
+  const amount = getTotalAmount();
+  const btn = document.getElementById('cart-footer-btn');
+  const countBadge = document.getElementById('cart-count-badge');
+  const itemsLabel = document.getElementById('cart-items-label');
+  const totalDisplay = document.getElementById('cart-total-display');
+
+  if (qty > 0) {
+    btn.classList.add('has-items');
+  } else {
+    btn.classList.remove('has-items');
+  }
+
+  if (countBadge) countBadge.textContent = qty;
+
+  const isBolus = bolusMode;
+  if (itemsLabel) {
+    itemsLabel.textContent = isBolus
+      ? qty + ' stuks'
+      : qty + ' artikel' + (qty !== 1 ? 'en' : '');
+  }
+
+  if (totalDisplay) {
+    totalDisplay.classList.remove('updating');
+    void totalDisplay.offsetWidth;
+    totalDisplay.classList.add('updating');
+    totalDisplay.textContent = '€ ' + amount.toFixed(2).replace('.', ',');
+    totalDisplay.addEventListener('animationend', () => totalDisplay.classList.remove('updating'), { once: true });
+  }
+}
+
+function filterProducts(value) {
+  renderProducts(value);
+}
+
+/* =============================================================
+   PRODUCT DETAIL PANEL
+   ============================================================= */
+function openProductDetail(index) {
+  const product = PRODUCTS[index];
+  if (!product) return;
+
+  const content = document.getElementById('panel-detail-content');
+  content.innerHTML = `
+    <div class="panel-product-image-placeholder" style="background:${product.bg};">
+      <span>${product.emoji}</span>
+    </div>
+    <div class="panel-body">
+      <div class="panel-brand">${product.brand}</div>
+      <div class="panel-product-name">${product.name}</div>
+      <div class="panel-color-chip">
+        <div class="panel-color-dot" style="background:${product.colorHex};border:1.5px solid rgba(0,0,0,0.15);"></div>
+        ${product.color}
+      </div>
+      <div class="panel-price-tag">
+        <span class="panel-price-label">Vanaf</span>
+        <span class="panel-price-value">€${product.price.toFixed(2).replace('.',',')}</span>
+      </div>
+      <div class="panel-info-grid">
+        <div class="panel-info-item">
+          <div class="panel-info-item-label">Materiaal</div>
+          <div class="panel-info-item-value">${product.material}</div>
+        </div>
+        ${product.weight ? `
+        <div class="panel-info-item">
+          <div class="panel-info-item-label">Gewicht</div>
+          <div class="panel-info-item-value">${product.weight}</div>
+        </div>` : ''}
+        <div class="panel-info-item">
+          <div class="panel-info-item-label">Artikelnummer</div>
+          <div class="panel-info-item-value">${product.article}</div>
+        </div>
+      </div>
+      <div>
+        <div class="panel-sizes-label" data-bolus data-normal="Beschikbare maten" data-bolus-text="Welk maat wil je?">Beschikbare maten</div>
+        <div class="panel-sizes-list">
+          ${product.sizes.map(s => `<div class="panel-size-chip">${s}</div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="panel-sizes-label" style="margin-bottom:8px;" data-bolus data-normal="Beschrijving" data-bolus-text="Wat is 't">Beschrijving</div>
+        <p class="panel-description">${product.description}</p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('panel-product-detail').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (bolusMode) applyBolusText();
+}
+
+function closeProductDetail() {
+  document.getElementById('panel-product-detail').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+/* =============================================================
+   CONFIRMATION PANEL
+   ============================================================= */
+function openConfirmation() {
+  const qty = getTotalQty();
+  if (qty === 0) return;
+
+  // Build order lines
+  const lines = [];
+  PRODUCTS.forEach(product => {
+    if (!cart[product.id]) return;
+    Object.entries(cart[product.id]).forEach(([size, q]) => {
+      if (q > 0) {
+        lines.push({ product, size, qty: q, lineTotal: q * product.price });
+      }
+    });
+  });
+
+  const wrap = document.getElementById('confirm-order-lines-wrap');
+  wrap.innerHTML = `
+    <div class="confirm-order-lines">
+      ${lines.map(l => `
+        <div class="confirm-line">
+          <div>
+            <div class="confirm-line-name">${l.product.name}</div>
+            <div class="confirm-line-meta">
+              <span style="display:inline-flex;align-items:center;gap:4px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${l.product.colorHex};border:1px solid rgba(0,0,0,0.1);"></span>
+                ${l.product.color}
+              </span>
+              &nbsp;·&nbsp; Maat ${l.size}
+            </div>
+          </div>
+          <div class="confirm-line-qty">${l.qty}×</div>
+          <div class="confirm-line-price">€${l.lineTotal.toFixed(2).replace('.',',')}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const total = getTotalAmount();
+  document.getElementById('confirm-total-amount').textContent = '€ ' + total.toFixed(2).replace('.', ',');
+
+  document.getElementById('panel-confirmation').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (bolusMode) applyBolusText();
+}
+
+function closeConfirmation() {
+  document.getElementById('panel-confirmation').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+/* =============================================================
+   PLACE ORDER
+   ============================================================= */
+function placeOrder() {
+  closeConfirmation();
+  setTimeout(() => {
+    showScreen('success');
+  }, 300);
+}
+
+/* =============================================================
+   NEW ORDER
+   ============================================================= */
+function startNewOrder() {
+  // Reset cart
+  Object.keys(cart).forEach(k => delete cart[k]);
+  updateCartFooter();
+  renderProducts();
+  showScreen('order');
+}
+
+/* =============================================================
+   CONFETTI
+   ============================================================= */
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#F18E00', '#00A0C8', '#008838', '#FF6B6B', '#FFD93D', '#6BCB77'];
+  const particles = [];
+  const count = 120;
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.5,
+      w: 8 + Math.random() * 10,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: -2 + Math.random() * 4,
+      vy: 2 + Math.random() * 5,
+      rot: Math.random() * 360,
+      rotSpeed: -3 + Math.random() * 6,
+      opacity: 1,
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      if (frame > 80) p.opacity = Math.max(0, p.opacity - 0.015);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.globalAlpha = p.opacity;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.fill();
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 160) requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* =============================================================
+   BOLUS MODE
+   ============================================================= */
+let bolusTimeout = null;
+let bolusCountdownInterval = null;
+let bolusCountdownEl = null;
+
+function setupLongPress(element) {
+  const logoMark = element.classList.contains('vk-logo-mark')
+    ? element
+    : element.querySelector('.vk-logo-mark');
+
+  function startPress(e) {
+    if (bolusMode) return; // Already activated
+
+    if (logoMark) logoMark.classList.add('pressing');
+
+    // Show countdown overlay
+    const overlay = document.getElementById('countdown-overlay');
+    bolusCountdownEl = document.getElementById('countdown-number');
+    let count = 3;
+    bolusCountdownEl.textContent = count;
+    overlay.classList.add('active');
+
+    bolusCountdownInterval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        bolusCountdownEl.textContent = count;
+        bolusCountdownEl.classList.remove('countdown-pulse');
+        void bolusCountdownEl.offsetWidth;
+        bolusCountdownEl.style.animation = 'none';
+        void bolusCountdownEl.offsetWidth;
+        bolusCountdownEl.style.animation = '';
+      } else {
+        clearInterval(bolusCountdownInterval);
+        overlay.classList.remove('active');
+        activateBolus();
+      }
+    }, 1000);
+
+    bolusTimeout = setTimeout(() => {}, 3000);
+  }
+
+  function cancelPress() {
+    if (logoMark) logoMark.classList.remove('pressing');
+    if (bolusCountdownInterval) {
+      clearInterval(bolusCountdownInterval);
+      bolusCountdownInterval = null;
+    }
+    document.getElementById('countdown-overlay').classList.remove('active');
+    if (bolusTimeout) {
+      clearTimeout(bolusTimeout);
+      bolusTimeout = null;
+    }
+  }
+
+  element.addEventListener('mousedown', startPress);
+  element.addEventListener('touchstart', startPress, { passive: true });
+  element.addEventListener('mouseup', cancelPress);
+  element.addEventListener('touchend', cancelPress);
+  element.addEventListener('mouseleave', cancelPress);
+  element.addEventListener('touchcancel', cancelPress);
+
+  // Prevent regular click from triggering default logo action
+  element.addEventListener('click', e => {
+    if (!bolusMode) e.stopPropagation();
+  });
+}
+
+function activateBolus() {
+  bolusMode = true;
+  document.getElementById('countdown-overlay').classList.remove('active');
+
+  // Flash + shake
+  document.body.classList.add('bolus-flash', 'bolus-mode');
+  setTimeout(() => {
+    document.body.classList.remove('bolus-flash');
+    document.body.classList.add('bolus-shake');
+    setTimeout(() => document.body.classList.remove('bolus-shake'), 500);
+  }, 600);
+
+  applyBolusText();
+  updateCartFooter();
+}
+
+function applyBolusText() {
+  document.querySelectorAll('[data-bolus]').forEach(el => {
+    if (bolusMode) {
+      const bolusText = el.getAttribute('data-bolus-text');
+      if (bolusText) {
+        // For inputs, change placeholder
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = bolusText;
+        } else {
+          el.textContent = bolusText;
+        }
+      }
+    } else {
+      const normalText = el.getAttribute('data-normal');
+      if (normalText) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = normalText;
+        } else {
+          el.textContent = normalText;
+        }
+      }
+    }
+  });
+}
+
+/* =============================================================
+   INIT
+   ============================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  // Render products on order screen
+  renderProducts();
+
+  // Setup long press on logos
+  document.querySelectorAll('.vk-logo-mark, #landing-logo').forEach(el => {
+    setupLongPress(el);
+  });
+  // Also setup on the vk-logo wrapper in order screen
+  const orderLogo = document.getElementById('order-logo');
+  if (orderLogo) setupLongPress(orderLogo);
+
+  // Disable all counter minus buttons initially (all counts are 0)
+  document.querySelectorAll('.counter-minus').forEach(btn => {
+    btn.setAttribute('disabled', '');
+  });
+});
+
+// Close panels on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeProductDetail();
+    closeConfirmation();
+    closeDevNav();
+  }
+});
+
+// Close dev nav when clicking outside
+document.addEventListener('click', e => {
+  const nav = document.getElementById('dev-nav');
+  if (!nav.contains(e.target)) {
+    closeDevNav();
+  }
+});
+</script>
+</body>
+</html>

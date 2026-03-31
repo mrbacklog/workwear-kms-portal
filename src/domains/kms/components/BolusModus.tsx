@@ -29,7 +29,7 @@ export function BolusModeCountdown({ countdownNumber, flashActive }: BolusModeCo
             position: 'fixed',
             inset: 0,
             zIndex: 9999,
-            background: kmsColors.white,
+            background: '#FFFFFF',
             animation: 'kms-bolus-flash 150ms ease-out forwards',
             pointerEvents: 'none',
           }}
@@ -90,7 +90,7 @@ export function BolusModeActiveBanner({ onDeactivate }: BolusModeActiveBannerPro
           right: 0,
           zIndex: 8000,
           background: kmsColors.orange,
-          color: kmsColors.white,
+          color: '#FFFFFF',
           fontFamily: kmsFont,
           fontSize: 11,
           fontWeight: 700,
@@ -109,7 +109,7 @@ export function BolusModeActiveBanner({ onDeactivate }: BolusModeActiveBannerPro
           style={{
             background: 'rgba(0,0,0,0.2)',
             border: 'none',
-            color: kmsColors.white,
+            color: '#FFFFFF',
             borderRadius: 4,
             padding: '2px 8px',
             fontSize: 10,

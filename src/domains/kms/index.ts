@@ -1,4 +1,4 @@
-export { kmsRoutes } from './routes';
+export { kmsRoutes, kmsPortalRoutes } from './routes';
 export { KmsLayout } from './components/KmsLayout';
 export { useKmsAuth } from './hooks/useKmsAuth';
 export { kmsColors, kmsFont } from './lib/kms-theme';

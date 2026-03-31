@@ -1,10 +1,11 @@
+import { useContext } from 'react';
 import type { CartState } from '../types';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 
 interface CartBarProps {
   cart: CartState;
   onClick: () => void;
-  onClear: () => void;
 }
 
 function formatPrice(cents: number): string {
@@ -13,7 +14,8 @@ function formatPrice(cents: number): string {
   );
 }
 
-export function CartBar({ cart, onClick, onClear }: CartBarProps) {
+export function CartBar({ cart, onClick }: CartBarProps) {
+  const { t } = useContext(BolusModeContext);
   const hasItems = cart.totalItems > 0;
 
   return (
@@ -24,6 +26,14 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
           50% { transform: scale(1.12); }
           100% { transform: scale(1); }
         }
+        @keyframes kms-pulse-glow {
+          0%, 100% { box-shadow: 0 4px 20px rgba(241,142,0,0.25); }
+          50% { box-shadow: 0 4px 28px rgba(241,142,0,0.45); }
+        }
+        @keyframes kms-cart-slide-up {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
       `}</style>
       <div
         style={{
@@ -33,12 +43,14 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
           right: 0,
           zIndex: 200,
           padding: '16px 20px',
-          background: kmsColors.white,
-          borderTop: '1px solid #F0F0F0',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.10)',
+          paddingTop: 32,
+          background: `linear-gradient(0deg, ${kmsColors.bg} 70%, transparent)`,
           transform: hasItems ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
           pointerEvents: hasItems ? 'auto' : 'none',
+          animation: hasItems
+            ? 'kms-cart-slide-up 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both'
+            : undefined,
         }}
       >
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -51,24 +63,24 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
               justifyContent: 'space-between',
               gap: 12,
               background: kmsColors.orange,
-              color: kmsColors.white,
+              color: '#FFFFFF',
               padding: '16px 20px',
               borderRadius: 18,
               fontSize: 15,
               fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(241,142,0,0.4)',
               cursor: 'pointer',
               border: 'none',
               fontFamily: kmsFont,
               width: '100%',
               transition: 'background 150ms ease, transform 150ms ease, box-shadow 150ms ease',
+              animation: 'kms-pulse-glow 3s ease-in-out infinite',
             }}
             onMouseEnter={(e) => {
               if (!hasItems) return;
-              (e.currentTarget as HTMLButtonElement).style.background = '#D97E00';
+              (e.currentTarget as HTMLButtonElement).style.background = kmsColors.orangeHover;
               (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
               (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                '0 6px 24px rgba(241,142,0,0.5)';
+                '0 6px 28px rgba(241,142,0,0.5)';
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = kmsColors.orange;
@@ -97,8 +109,8 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
                     position: 'absolute',
                     top: -8,
                     right: -8,
-                    background: kmsColors.black,
-                    color: kmsColors.white,
+                    background: '#000000',
+                    color: '#FFFFFF',
                     fontSize: 10,
                     fontWeight: 700,
                     width: 18,
@@ -115,27 +127,23 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
               </div>
               <span style={{ fontFamily: kmsFont, fontSize: 14, fontWeight: 600 }}>
                 {cart.totalItems}{' '}
-                {cart.totalItems === 1 ? 'artikel' : 'artikelen'}
+                {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
               </span>
             </div>
 
             {/* Right: total + arrow */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ textAlign: 'right' }}>
-                <span
-                  key={cart.totalCents}
-                  style={{
-                    fontSize: 17,
-                    fontWeight: 800,
-                    fontFamily: kmsFont,
-                    animation: 'kms-total-update 200ms ease-out',
-                    display: 'block',
-                  }}
-                >
-                  {formatPrice(cart.totalCents)}
-                </span>
-                <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.75 }}>excl. BTW</span>
-              </div>
+              <span
+                key={cart.totalCents}
+                style={{
+                  fontSize: 17,
+                  fontWeight: 800,
+                  fontFamily: kmsFont,
+                  animation: 'kms-total-update 200ms ease-out',
+                }}
+              >
+                {formatPrice(cart.totalCents)}
+              </span>
               <svg
                 width="18"
                 height="18"
@@ -147,26 +155,6 @@ export function CartBar({ cart, onClick, onClear }: CartBarProps) {
                 <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-          </button>
-
-          {/* Clear cart link */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onClear(); }}
-            style={{
-              display: 'block',
-              margin: '8px auto 0',
-              background: 'none',
-              border: 'none',
-              color: '#999',
-              fontSize: 12,
-              fontFamily: kmsFont,
-              cursor: 'pointer',
-              padding: '4px 8px',
-              textDecoration: 'underline',
-              textUnderlineOffset: 2,
-            }}
-          >
-            Winkelwagen legen
           </button>
         </div>
       </div>

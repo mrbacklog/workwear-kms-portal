@@ -2,6 +2,8 @@ export interface KmsAuthResponse {
   access_token: string;
   customer_name: string;
   customer_slug: string;
+  refresh_token?: string;
+  expires_in?: number;
 }
 
 export interface KmsRequestBody {
@@ -66,5 +68,9 @@ export interface KmsOrderResponse {
   reference: string | null;
   notes: string | null;
   total_cents: number;
+  total_amount_cents: number;
+  gripp_offer_number: string | null;
+  gripp_status: 'created' | 'failed' | 'skipped' | null;
+  gripp_status_detail: string | null;
   created_at: string;
 }
