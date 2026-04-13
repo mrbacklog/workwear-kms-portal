@@ -33,6 +33,9 @@ export interface KmsPortalProduct {
   model_name: string;
   brand_name: string;
   color: string;
+  color_primary_hex: string | null;
+  color_secondary_hex: string | null;
+  color_tertiary_hex: string | null;
   price_from_cents: number | null;
   image_url: string | null;
   variants: KmsPortalVariant[];

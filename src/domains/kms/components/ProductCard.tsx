@@ -3,6 +3,7 @@ import type { KmsPortalProduct, CartState } from '../types';
 import { kmsColors, kmsFont, colorNameToHex } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { SizeSelector } from './SizeSelector';
+import { ColorSwatch } from './ColorSwatch';
 
 interface ProductCardProps {
   product: KmsPortalProduct;
@@ -36,7 +37,8 @@ export function ProductCard({
   }, 0);
 
   const hasSelection = selectedQuantity > 0;
-  const colorHex = colorNameToHex(product.color);
+  // colorHex als fallback voor de thumbnail placeholder
+  const colorHex = product.color_primary_hex ?? colorNameToHex(product.color);
 
   return (
     <>
@@ -144,15 +146,11 @@ export function ProductCard({
                 gap: 6,
               }}
             >
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  background: colorHex,
-                  flexShrink: 0,
-                }}
+              <ColorSwatch
+                hexCode={product.color_primary_hex}
+                secondaryHex={product.color_secondary_hex}
+                tertiaryHex={product.color_tertiary_hex}
+                size={10}
               />
               {product.color}
             </div>

@@ -2,6 +2,7 @@ import { useEffect, useContext } from 'react';
 import type { KmsPortalProduct } from '../types';
 import { kmsColors, kmsFont, colorNameToHex } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
+import { ColorSwatch } from './ColorSwatch';
 
 interface ProductDetailProps {
   product: KmsPortalProduct | null;
@@ -41,7 +42,7 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  const colorHex = product ? colorNameToHex(product.color) : '#888';
+  const colorHex = product ? (product.color_primary_hex ?? colorNameToHex(product.color)) : '#888';
 
   return (
     <>
@@ -258,15 +259,11 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                     fontFamily: kmsFont,
                   }}
                 >
-                  <div
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: '50%',
-                      border: '1.5px solid rgba(255,255,255,0.1)',
-                      background: colorHex,
-                      flexShrink: 0,
-                    }}
+                  <ColorSwatch
+                    hexCode={product.color_primary_hex}
+                    secondaryHex={product.color_secondary_hex}
+                    tertiaryHex={product.color_tertiary_hex}
+                    size={14}
                   />
                   {product.color}
                 </div>
