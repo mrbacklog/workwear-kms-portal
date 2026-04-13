@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes } from 'react-router-dom'
-import { kmsRoutes } from './domains/kms'
+import { kmsPortalRoutes } from './domains/kms'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {kmsRoutes()}
+        {kmsPortalRoutes()}
       </Routes>
     </BrowserRouter>
   )
