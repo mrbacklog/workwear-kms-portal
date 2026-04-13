@@ -133,13 +133,11 @@ export default function KmsOrderPage() {
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.model_name.toLowerCase().includes(q) ||
-        p.brand_name.toLowerCase().includes(q) ||
-        p.color.toLowerCase().includes(q),
-    );
+    const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return products.filter((p) => {
+      const text = `${p.brand_name} ${p.model_name} ${p.color}`.toLowerCase();
+      return words.every((word) => text.includes(word));
+    });
   }, [products, searchQuery]);
 
   function handleToggle(index: number) {
