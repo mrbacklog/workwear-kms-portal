@@ -1,6 +1,6 @@
 import { useEffect, useContext } from 'react';
 import type { KmsPortalProduct } from '../types';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, colorNameToHex } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 
 interface ProductDetailProps {
@@ -15,41 +15,6 @@ function formatPrice(cents: number): string {
   );
 }
 
-function colorNameToHex(colorName: string): string {
-  const map: Record<string, string> = {
-    zwart: '#1A1A1A',
-    black: '#1A1A1A',
-    wit: '#F5F5F5',
-    white: '#F5F5F5',
-    navy: '#1B2A4A',
-    grijs: '#888888',
-    grey: '#888888',
-    gray: '#888888',
-    blauw: '#1E5FA3',
-    blue: '#1E5FA3',
-    rood: '#C0392B',
-    red: '#C0392B',
-    groen: '#27AE60',
-    green: '#27AE60',
-    geel: '#F1C40F',
-    yellow: '#F1C40F',
-    oranje: '#E67E22',
-    orange: '#E67E22',
-    bruin: '#7B5A3A',
-    brown: '#7B5A3A',
-    beige: '#D4C5A9',
-  };
-  const key = colorName.toLowerCase();
-  for (const [name, hex] of Object.entries(map)) {
-    if (key.includes(name)) return hex;
-  }
-  let hash = 0;
-  for (let i = 0; i < colorName.length; i++) {
-    hash = colorName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h}, 45%, 45%)`;
-}
 
 export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) {
   const { t } = useContext(BolusModeContext);

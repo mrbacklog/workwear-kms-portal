@@ -35,6 +35,90 @@ export const kmsColors = {
 
 export const kmsFont = "'Poppins', sans-serif";
 
+/**
+ * Vertaalt een kleur-naam (color_raw) naar een hex kleurcode voor de swatch.
+ * - Composite kleuren ("Bosgroen/Zwart") → gebruik de eerste component
+ * - Bekende sleutelwoorden worden gematcht (ook als onderdeel van de naam)
+ * - Hash-fallback voor volledig onbekende kleuren
+ */
+export function colorNameToHex(colorName: string): string {
+  // Composite kleuren: neem de primaire (eerste) kleur
+  const primary = colorName.split('/')[0].trim();
+  const key = primary.toLowerCase();
+
+  const map: [string, string][] = [
+    // Nederlands
+    ['zwart', '#1A1A1A'],
+    ['wit', '#F5F5F5'],
+    ['navy', '#1B2A4A'],
+    ['marine', '#1B2A4A'],
+    ['grijs', '#888888'],
+    ['blauw', '#1E5FA3'],
+    ['denim', '#2C5F8A'],
+    ['kobalt', '#0047AB'],
+    ['rood', '#C0392B'],
+    ['bordeaux', '#6D1A2A'],
+    ['wijn', '#6D1A2A'],
+    ['groen', '#2D7A3A'],
+    ['bosgroen', '#2D5A1B'],
+    ['olijf', '#6B7A2A'],
+    ['khaki', '#7D7A45'],
+    ['geel', '#E6C219'],
+    ['oranje', '#E67E22'],
+    ['bruin', '#7B5A3A'],
+    ['camel', '#C19A6B'],
+    ['beige', '#D4C5A9'],
+    ['sahara', '#C8A96E'],
+    ['zand', '#C2A97A'],
+    ['lichtblauw', '#5C9BD4'],
+    ['paars', '#7B2D8B'],
+    ['lila', '#9B59B6'],
+    ['roze', '#E06090'],
+    ['creme', '#F5F0DC'],
+    ['ivoor', '#F5F0DC'],
+    ['zilver', '#B0B0B0'],
+    ['goud', '#C9A84C'],
+    // Engels
+    ['black', '#1A1A1A'],
+    ['white', '#F5F5F5'],
+    ['grey', '#888888'],
+    ['gray', '#888888'],
+    ['blue', '#1E5FA3'],
+    ['cobalt', '#0047AB'],
+    ['red', '#C0392B'],
+    ['burgundy', '#6D1A2A'],
+    ['green', '#2D7A3A'],
+    ['forest', '#2D5A1B'],
+    ['olive', '#6B7A2A'],
+    ['yellow', '#E6C219'],
+    ['orange', '#E67E22'],
+    ['brown', '#7B5A3A'],
+    ['tan', '#C19A6B'],
+    ['sand', '#C2A97A'],
+    ['purple', '#7B2D8B'],
+    ['pink', '#E06090'],
+    ['cream', '#F5F0DC'],
+    ['silver', '#B0B0B0'],
+    ['gold', '#C9A84C'],
+    ['teal', '#1A8F8F'],
+    ['turquoise', '#1ABC9C'],
+    ['coral', '#E05C4B'],
+    ['lime', '#7DC242'],
+  ];
+
+  for (const [name, hex] of map) {
+    if (key.includes(name)) return hex;
+  }
+
+  // Hash-fallback voor volledig onbekende kleuren
+  let hash = 0;
+  for (let i = 0; i < colorName.length; i++) {
+    hash = (colorName.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 40%, 40%)`;
+}
+
 /** Default slug when running on kms.databiz.app (no slug in URL) */
 export const KMS_DEFAULT_SLUG = 'vankruiningen';
 
