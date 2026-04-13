@@ -4,6 +4,14 @@ export interface KmsAuthResponse {
   customer_slug: string;
   refresh_token?: string;
   expires_in?: number;
+  is_staff?: boolean;
+}
+
+export interface KmsStaffCustomer {
+  id: string;
+  company_name: string;
+  slug: string;
+  open_orders: number;
 }
 
 export interface KmsRequestBody {

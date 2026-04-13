@@ -1,15 +1,23 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
 import { useBolusModus } from '../hooks/useBolusModus';
 import { BolusModeCountdown, BolusModeActiveBanner } from './BolusModus';
 import { BolusModeContext } from '../lib/kms-bolus-context';
+import { CustomerSwitcher } from './CustomerSwitcher';
+import { FeedbackDrawer } from './FeedbackDrawer';
+import type { KmsStaffCustomer } from '../types';
 
 interface KmsLayoutProps {
   children: ReactNode;
   customerName?: string | null;
+  isStaff?: boolean;
+  selectedCustomer?: { id: string; company_name: string } | null;
+  onCustomerSwitch?: (customer: KmsStaffCustomer) => void;
+  onLogout?: () => void;
 }
 
-export function KmsLayout({ children, customerName }: KmsLayoutProps) {
+export function KmsLayout({ children, customerName, isStaff, selectedCustomer, onCustomerSwitch, onLogout }: KmsLayoutProps) {
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const { isActive, state, pressProgress, countdownNumber, flashActive, handlers, t, deactivate } =
     useBolusModus();
 
@@ -108,23 +116,92 @@ export function KmsLayout({ children, customerName }: KmsLayoutProps) {
               </div>
             </div>
 
-            {/* Right: Customer name */}
-            {customerName && (
-              <div
-                style={{
-                  fontFamily: kmsFont,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: kmsColors.textSecondary,
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {customerName}
-              </div>
-            )}
+            {/* Right: Customer name + logout */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isStaff && selectedCustomer ? (
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setSwitcherOpen((prev) => !prev)}
+                    style={{
+                      fontFamily: kmsFont,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: kmsColors.textSecondary,
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      maxWidth: 200,
+                      transition: 'color 150ms ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = kmsColors.text; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = kmsColors.textSecondary; }}
+                    aria-label={t('layout.switch_customer')}
+                  >
+                    <span
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {selectedCustomer.company_name}
+                    </span>
+                    <span style={{ flexShrink: 0, fontSize: 10 }}>▾</span>
+                  </button>
+                  {switcherOpen && onCustomerSwitch && (
+                    <CustomerSwitcher
+                      currentCustomerId={selectedCustomer.id}
+                      onSelect={(customer) => {
+                        setSwitcherOpen(false);
+                        onCustomerSwitch(customer);
+                      }}
+                      onClose={() => setSwitcherOpen(false)}
+                    />
+                  )}
+                </div>
+              ) : customerName ? (
+                <div
+                  style={{
+                    fontFamily: kmsFont,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: kmsColors.textSecondary,
+                    maxWidth: 200,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {customerName}
+                </div>
+              ) : null}
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  style={{
+                    fontFamily: kmsFont,
+                    fontSize: 12,
+                    color: kmsColors.textMuted,
+                    background: 'none',
+                    border: `1px solid ${kmsColors.textMuted}`,
+                    borderRadius: 6,
+                    padding: '4px 10px',
+                    cursor: 'pointer',
+                    transition: 'color 150ms ease, border-color 150ms ease',
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = kmsColors.text; e.currentTarget.style.borderColor = kmsColors.text; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = kmsColors.textMuted; e.currentTarget.style.borderColor = kmsColors.textMuted; }}
+                >
+                  {t('layout.logout')}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Animated gradient bar */}
@@ -161,6 +238,8 @@ export function KmsLayout({ children, customerName }: KmsLayoutProps) {
           </div>
         </main>
       </div>
+      {/* Feedback drawer — alleen voor staff */}
+      {isStaff && <FeedbackDrawer />}
     </BolusModeContext.Provider>
   );
 }

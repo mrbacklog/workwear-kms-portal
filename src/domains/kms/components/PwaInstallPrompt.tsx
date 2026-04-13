@@ -1,7 +1,10 @@
+import { useContext } from 'react';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
 import { usePwaInstall } from '../hooks/usePwaInstall';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 
 export function PwaInstallPrompt() {
+  const { t } = useContext(BolusModeContext);
   const { canInstall, promptInstall, isIos, dismiss } = usePwaInstall();
 
   if (!canInstall) return null;
@@ -83,7 +86,7 @@ export function PwaInstallPrompt() {
             transition: 'background 150ms ease',
           }}
         >
-          Begrepen
+          {t('pwa.close')}
         </button>
       </div>
     );
@@ -166,7 +169,7 @@ export function PwaInstallPrompt() {
             transition: 'background 150ms ease',
           }}
         >
-          Toevoegen
+          {t('pwa.add')}
         </button>
 
         <button
@@ -182,7 +185,7 @@ export function PwaInstallPrompt() {
             fontFamily: kmsFont,
           }}
         >
-          Misschien later
+          {t('pwa.close')}
         </button>
       </div>
     </div>

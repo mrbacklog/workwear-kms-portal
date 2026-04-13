@@ -52,9 +52,14 @@ export default function KmsHmacAuthPage() {
         const data = await res.json();
         login(data);
 
-        // Redirect naar bestemming
-        const dest = isKmsPortal ? d : `/kms/${slug}${d === '/' ? '' : d}`;
-        navigate(dest, { replace: true });
+        // Staff gaat naar klantenpicker, niet naar de bestemming
+        if (data.is_staff) {
+          navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
+        } else {
+          // Redirect naar bestemming
+          const dest = isKmsPortal ? d : `/kms/${slug}${d === '/' ? '' : d}`;
+          navigate(dest, { replace: true });
+        }
       } catch {
         setError('Er is een fout opgetreden. Probeer het opnieuw.');
         setLoading(false);

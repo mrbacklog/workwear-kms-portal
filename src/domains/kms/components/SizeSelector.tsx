@@ -20,9 +20,11 @@ interface CounterProps {
   value: number;
   onIncrement: () => void;
   onDecrement: () => void;
+  decreaseLabel: string;
+  increaseLabel: string;
 }
 
-function Counter({ value, onIncrement, onDecrement }: CounterProps) {
+function Counter({ value, onIncrement, onDecrement, decreaseLabel, increaseLabel }: CounterProps) {
   const [bounce, setBounce] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,7 +73,7 @@ function Counter({ value, onIncrement, onDecrement }: CounterProps) {
           fontFamily: kmsFont,
           flexShrink: 0,
         }}
-        aria-label="Verminder"
+        aria-label={decreaseLabel}
       >
         −
       </button>
@@ -111,7 +113,7 @@ function Counter({ value, onIncrement, onDecrement }: CounterProps) {
           fontFamily: kmsFont,
           flexShrink: 0,
         }}
-        aria-label="Verhoog"
+        aria-label={increaseLabel}
       >
         +
       </button>
@@ -218,6 +220,8 @@ export function SizeSelector({ variants, cart, onQuantityChange, onDetailClick }
                   value={qty}
                   onIncrement={() => onQuantityChange(variant.id, qty + 1)}
                   onDecrement={() => onQuantityChange(variant.id, Math.max(0, qty - 1))}
+                  decreaseLabel={t('size.decrease')}
+                  increaseLabel={t('size.increase')}
                 />
               </div>
             );

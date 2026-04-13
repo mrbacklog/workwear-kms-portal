@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { translations } from '../lib/kms-translations';
+import { getTranslation, loadRemoteTranslations } from '../lib/kms-translations';
 import type { TranslationKey } from '../lib/kms-translations';
 
 type BolusModeState = 'idle' | 'pressing' | 'countdown' | 'active';
@@ -115,6 +115,11 @@ export function useBolusModus(): UseBolusModus {
     setCountdownNumber(null);
   }, []);
 
+  // Load remote translations on mount
+  useEffect(() => {
+    void loadRemoteTranslations();
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -126,7 +131,7 @@ export function useBolusModus(): UseBolusModus {
   const t = useCallback(
     (key: TranslationKey): string => {
       const locale = modeState === 'active' ? 'nl-ZB' : 'nl';
-      return translations[locale][key];
+      return getTranslation(key, locale);
     },
     [modeState],
   );

@@ -1,3 +1,9 @@
+import { kmsApiBase } from './kms-theme'
+
+// ============================================================
+// Hardcoded translations
+// ============================================================
+
 export const translations = {
   nl: {
     'order.place': 'Bestelling plaatsen',
@@ -80,6 +86,40 @@ export const translations = {
     'verify.error_connection': 'Er is een verbindingsfout opgetreden. Probeer het opnieuw.',
     'verify.error_title': 'Link ongeldig',
     'verify.back': 'Terug naar aanmelden',
+
+    // PasskeyLoginSection
+    'passkey.error': 'Inloggen met passkey mislukt. Gebruik uw e-mailadres.',
+    'passkey.loading': 'Even geduld...',
+    'passkey.button': 'Inloggen met passkey',
+    'passkey.hint': 'Gezicht, vingerafdruk of pincode',
+    'passkey.divider': 'of',
+
+    // Auth errors
+    'auth.error_generic': 'Er is een fout opgetreden. Probeer het opnieuw.',
+
+    // Layout
+    'layout.logout': 'Uitloggen',
+    'layout.switch_customer': 'Wissel van klant',
+
+    // Customer picker (staff)
+    'picker.title': 'Klant selecteren',
+    'picker.description': 'Kies een klant om hun assortiment te bekijken',
+    'picker.search_placeholder': 'Zoek op bedrijfsnaam...',
+    'picker.error': 'Kon klanten niet laden. Probeer het opnieuw.',
+    'picker.retry': 'Opnieuw proberen',
+    'picker.empty': 'Geen klanten gevonden',
+    'picker.no_customers': 'Er zijn nog geen actieve klanten.',
+
+    // PWA install
+    'pwa.add': 'Toevoegen',
+    'pwa.close': 'Sluiten',
+
+    // ProductCard
+    'product.price_from': 'vanaf',
+
+    // SizeSelector aria labels
+    'size.decrease': 'Verminder',
+    'size.increase': 'Verhoog',
   },
   'nl-ZB': {
     // Yerseks / Zuid-Bevelands dialect
@@ -164,8 +204,71 @@ export const translations = {
     'verify.error_connection': "'t Lukt nie om te verbinden. Prebeer 't noh 's.",
     'verify.error_title': "Link is nie hoed",
     'verify.back': "Vromme ni aanmelden",
+
+    // PasskeyLoginSection
+    'passkey.error': "Inloggen met passkey lukt nie. Doen joe mail mî.",
+    'passkey.loading': "'n Moment...",
+    'passkey.button': "Inloggen met passkey",
+    'passkey.hint': "Ezicht, vingerofdruk of pinkode",
+    'passkey.divider': "of",
+
+    // Auth errors
+    'auth.error_generic': "'t Hink mis. Prebeer 't noh 's.",
+
+    // Layout
+    'layout.logout': "Uitloggen",
+    'layout.switch_customer': "Wissel van klant",
+
+    // Customer picker (staff)
+    'picker.title': "Klant kiezen",
+    'picker.description': "Kies 'n klant om 't assortiment te bekieken",
+    'picker.search_placeholder': "Zoek op bedriefsniem...",
+    'picker.error': "'t Lukt nie om klanten te laden. Prebeer 't noh 's.",
+    'picker.retry': "Prebeer 't noh 's",
+    'picker.empty': "Hin klanten evonden",
+    'picker.no_customers': "D'r bin noh hin klanten.",
+
+    // PWA install
+    'pwa.add': "Toevoegen",
+    'pwa.close': "Dicht doen",
+
+    // ProductCard
+    'product.price_from': "vanof",
+
+    // SizeSelector aria labels
+    'size.decrease': "Minder",
+    'size.increase': "Meer",
   },
 } as const;
 
 export type TranslationKey = keyof typeof translations.nl;
 export type Locale = keyof typeof translations;
+
+// ============================================================
+// Remote translation cache
+// ============================================================
+
+let remoteTranslationsCache: Record<string, string> | null = null
+let cacheTimestamp = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+export async function loadRemoteTranslations(): Promise<void> {
+  if (remoteTranslationsCache && Date.now() - cacheTimestamp < CACHE_TTL) return
+  try {
+    const res = await fetch(`${kmsApiBase}/api/v1/kms/translations?locale=nl-ZB`)
+    if (res.ok) {
+      const data = (await res.json()) as { locale: string; translations: Record<string, string> }
+      remoteTranslationsCache = data.translations
+      cacheTimestamp = Date.now()
+    }
+  } catch {
+    // Silently fail — use hardcoded defaults
+  }
+}
+
+export function getTranslation(key: TranslationKey, locale: Locale): string {
+  if (locale === 'nl-ZB' && remoteTranslationsCache?.[key]) {
+    return remoteTranslationsCache[key]
+  }
+  return translations[locale][key]
+}

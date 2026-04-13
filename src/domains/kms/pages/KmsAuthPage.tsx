@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { PasskeyLoginSection } from '../components/PasskeyLoginSection';
@@ -11,16 +11,31 @@ export default function KmsAuthPage() {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const slug = urlSlug || KMS_DEFAULT_SLUG;
   const { t } = useContext(BolusModeContext);
-  const { login } = useKmsAuth();
+  const { login, isAuthenticated, isStaff } = useKmsAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Ingelogde gebruiker direct doorsturen
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (isStaff) {
+        navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
+      } else {
+        navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+      }
+    }
+  }, [isAuthenticated, isStaff, navigate, slug]);
+
   function handlePasskeySuccess(authResponse: KmsAuthResponse) {
     login(authResponse);
-    navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+    if (authResponse.is_staff) {
+      navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
+    } else {
+      navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,12 +54,12 @@ export default function KmsAuthPage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail ?? 'Er is een fout opgetreden. Probeer het opnieuw.');
+        throw new Error(data.detail ?? t('auth.error_generic'));
       }
 
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Er is een fout opgetreden. Probeer het opnieuw.');
+      setError(err instanceof Error ? err.message : t('auth.error_generic'));
     } finally {
       setLoading(false);
     }

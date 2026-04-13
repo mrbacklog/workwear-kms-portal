@@ -80,6 +80,20 @@ export async function kmsAuthFetch(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  // Staff: add customer context header
+  const isStaff = localStorage.getItem('kms_is_staff') === 'true';
+  if (isStaff) {
+    const stored = localStorage.getItem('kms_staff_selected_customer');
+    if (stored) {
+      try {
+        const customer = JSON.parse(stored) as { id: string };
+        headers.set('X-KMS-Customer-Id', customer.id);
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }
+
   const response = await fetch(url, { ...init, headers });
 
   // Bij 401: probeer refresh (singleton)

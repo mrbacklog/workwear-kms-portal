@@ -1,5 +1,7 @@
+import { useContext } from 'react';
 import type { KmsPortalProduct, CartState } from '../types';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 import { SizeSelector } from './SizeSelector';
 
 interface ProductCardProps {
@@ -64,6 +66,7 @@ export function ProductCard({
   onQuantityChange,
   index,
 }: ProductCardProps) {
+  const { t } = useContext(BolusModeContext);
   const selectedQuantity = product.variants.reduce((sum, variant) => {
     return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
   }, 0);
@@ -128,7 +131,7 @@ export function ProductCard({
                 borderRadius: 6,
                 objectFit: 'cover',
                 flexShrink: 0,
-                background: kmsColors.surfaceHover,
+                background: '#ffffff',
               }}
             />
           ) : (
@@ -199,7 +202,7 @@ export function ProductCard({
                   fontFamily: kmsFont,
                 }}
               >
-                vanaf {formatPrice(product.price_from_cents)}
+                {t('product.price_from')} {formatPrice(product.price_from_cents)}
               </div>
             )}
           </div>

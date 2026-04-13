@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
+import { useKmsStaffContext } from '../hooks/useKmsStaffContext';
 import { useCart } from '../hooks/useCart';
 import { ProductCard } from '../components/ProductCard';
 import { CartBar } from '../components/CartBar';
@@ -75,17 +76,20 @@ function CardSkeleton() {
 export default function KmsOrderPage() {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { customerName, isAuthenticated, customerSlug } = useKmsAuth();
+  const { customerName, isAuthenticated, customerSlug, isStaff, logout } = useKmsAuth();
+  const { selectedCustomer, selectCustomer } = useKmsStaffContext();
   const slug = urlSlug || customerSlug || KMS_DEFAULT_SLUG;
   const { t } = useContext(BolusModeContext);
   const { canInstall, promptInstall, isIos, dismiss: dismissPwa } = usePwaInstall();
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated; staff without customer goes to picker
   useEffect(() => {
     if (!isAuthenticated) {
       navigate(isKmsPortal ? '/' : `/kms/${slug}`, { replace: true });
+    } else if (isStaff && !selectedCustomer) {
+      navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
     }
-  }, [isAuthenticated, navigate, slug]);
+  }, [isAuthenticated, isStaff, selectedCustomer, navigate, slug]);
 
   const [products, setProducts] = useState<KmsPortalProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,7 +179,16 @@ export default function KmsOrderPage() {
         }
       `}</style>
 
-      <KmsLayout customerName={customerName}>
+      <KmsLayout
+        customerName={customerName}
+        isStaff={isStaff}
+        selectedCustomer={selectedCustomer}
+        onCustomerSwitch={(customer) => {
+          selectCustomer(customer);
+          window.location.reload();
+        }}
+        onLogout={() => { logout(); navigate('/'); }}
+      >
         {/* Search bar */}
         <div
           style={{

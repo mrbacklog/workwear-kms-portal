@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
 import { isPasskeyAvailable, authenticateWithPasskey } from '../lib/kms-passkey';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 import type { KmsAuthResponse } from '../types';
 
 interface PasskeyLoginSectionProps {
@@ -8,6 +9,7 @@ interface PasskeyLoginSectionProps {
 }
 
 export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
+  const { t } = useContext(BolusModeContext);
   const [available, setAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +34,10 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
           expires_in: result.expires_in,
         });
       } else {
-        setError('Inloggen met vingerafdruk mislukt. Gebruik uw e-mailadres.');
+        setError(t('passkey.error'));
       }
     } catch {
-      setError('Inloggen met vingerafdruk mislukt. Gebruik uw e-mailadres.');
+      setError(t('passkey.error'));
     } finally {
       setLoading(false);
     }
@@ -43,28 +45,15 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
 
   return (
     <div style={{ fontFamily: kmsFont }}>
-      <p
-        style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: kmsColors.textSecondary,
-          marginTop: 0,
-          marginBottom: 10,
-          letterSpacing: '0.3px',
-        }}
-      >
-        Inloggen met vingerafdruk
-      </p>
-
       <button
         onClick={() => void handlePasskeyLogin()}
         disabled={loading}
         style={{
           width: '100%',
           padding: '14px 20px',
-          background: loading ? 'rgba(255,255,255,0.12)' : kmsColors.orange,
-          color: '#FFFFFF',
-          border: 'none',
+          background: loading ? 'rgba(255,255,255,0.12)' : 'transparent',
+          color: loading ? kmsColors.textMuted : kmsColors.text,
+          border: `1.5px solid ${loading ? kmsColors.textMuted : kmsColors.textSecondary}`,
           borderRadius: 12,
           fontSize: 15,
           fontWeight: 600,
@@ -74,8 +63,7 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 10,
-          boxShadow: loading ? 'none' : '0 4px 12px rgba(241,142,0,0.35)',
-          transition: 'background 150ms ease, box-shadow 150ms ease',
+          transition: 'border-color 150ms ease, color 150ms ease',
         }}
       >
         {loading ? (
@@ -91,18 +79,33 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
                 animation: 'kms-spin 0.7s linear infinite',
               }}
             />
-            Even geduld...
+            {t('passkey.loading')}
           </>
         ) : (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 11c0-1.1-.9-2-2-2s-2 .9-2 2c0 .74.4 1.38 1 1.72V17h2v-4.28c.6-.34 1-.98 1-1.72z" />
-              <path d="M12 2C7.58 2 4 5.58 4 10c0 2.03.76 3.87 2 5.28V20h2v-2h8v2h2v-4.72c1.24-1.41 2-3.25 2-5.28 0-4.42-3.58-8-8-8z" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15.5 7.5C15.5 9.433 13.933 11 12 11S8.5 9.433 8.5 7.5 10.067 4 12 4s3.5 1.567 3.5 3.5z" />
+              <path d="M12 14c-3 0-5 1.5-5 3.5V20h10v-2.5c0-2-2-3.5-5-3.5z" />
+              <path d="M18 8l2 2 4-4" />
             </svg>
-            Vingerafdruk gebruiken
+            {t('passkey.button')}
           </>
         )}
       </button>
+
+      {!error && (
+        <p
+          style={{
+            margin: '6px 0 0',
+            fontSize: 12,
+            color: kmsColors.textMuted,
+            fontFamily: kmsFont,
+            textAlign: 'center',
+          }}
+        >
+          {t('passkey.hint')}
+        </p>
+      )}
 
       {error && (
         <p
@@ -136,7 +139,7 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
             letterSpacing: '0.5px',
           }}
         >
-          of
+          {t('passkey.divider')}
         </span>
         <div style={{ flex: 1, height: 1, background: kmsColors.border }} />
       </div>

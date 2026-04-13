@@ -102,7 +102,7 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 export default function KmsConfirmPage() {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const location = useLocation();
-  const { customerName, customerSlug, token } = useKmsAuth();
+  const { customerName, customerSlug, token, logout } = useKmsAuth();
   const slug = urlSlug || customerSlug || KMS_DEFAULT_SLUG;
   const { t } = useContext(BolusModeContext);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -154,7 +154,7 @@ export default function KmsConfirmPage() {
         }}
       />
 
-      <KmsLayout customerName={customerName}>
+      <KmsLayout customerName={customerName} onLogout={() => { logout(); window.location.href = '/'; }}>
         <div
           style={{
             paddingTop: 48,

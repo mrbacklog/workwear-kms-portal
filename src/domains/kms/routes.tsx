@@ -7,6 +7,7 @@ const KmsVerifyPage = lazy(() => import('./pages/KmsVerifyPage'));
 const KmsOrderPage = lazy(() => import('./pages/KmsOrderPage'));
 const KmsConfirmPage = lazy(() => import('./pages/KmsConfirmPage'));
 const KmsHmacAuthPage = lazy(() => import('./pages/KmsHmacAuthPage'));
+const KmsCustomerPickerPage = lazy(() => import('./pages/KmsCustomerPickerPage'));
 
 function withSuspense(element: React.ReactElement) {
   return <Suspense fallback={<KmsSpinner />}>{element}</Suspense>;
@@ -21,6 +22,7 @@ export function kmsRoutes() {
       <Route path="/kms/:slug/auth/:token" element={withSuspense(<KmsVerifyPage />)} />
       <Route path="/kms/:slug/bestellen" element={withSuspense(<KmsOrderPage />)} />
       <Route path="/kms/:slug/bevestiging" element={withSuspense(<KmsConfirmPage />)} />
+      <Route path="/kms/:slug/klanten" element={withSuspense(<KmsCustomerPickerPage />)} />
     </>
   );
 }
@@ -34,6 +36,7 @@ export function kmsPortalRoutes() {
       <Route path="/auth/:token" element={withSuspense(<KmsVerifyPage />)} />
       <Route path="/bestellen" element={withSuspense(<KmsOrderPage />)} />
       <Route path="/bevestiging" element={withSuspense(<KmsConfirmPage />)} />
+      <Route path="/klanten" element={withSuspense(<KmsCustomerPickerPage />)} />
     </>
   );
 }

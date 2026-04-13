@@ -44,7 +44,11 @@ export default function KmsVerifyPage() {
 
         const data: KmsAuthResponse = await response.json();
         login(data);
-        navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+        if (data.is_staff) {
+          navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
+        } else {
+          navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
+        }
       } catch {
         setErrorMessage(t('verify.error_connection'));
         setStatus('error');

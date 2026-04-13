@@ -221,8 +221,8 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
                   style={{
                     width: '100%',
                     aspectRatio: '4/3',
-                    objectFit: 'cover',
-                    background: kmsColors.surfaceHover,
+                    objectFit: 'contain',
+                    background: '#ffffff',
                     display: 'block',
                   }}
                 />
