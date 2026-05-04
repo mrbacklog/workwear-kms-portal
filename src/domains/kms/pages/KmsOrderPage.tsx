@@ -92,6 +92,7 @@ export default function KmsOrderPage() {
   }, [isAuthenticated, isStaff, selectedCustomer, navigate, slug]);
 
   const [products, setProducts] = useState<KmsPortalProduct[]>([]);
+  const [customerHasGrippId, setCustomerHasGrippId] = useState<boolean>(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,6 +118,7 @@ export default function KmsOrderPage() {
       }
       const data: KmsPortalProductList = await res.json();
       setProducts(data.products ?? []);
+      setCustomerHasGrippId(data.customer_has_gripp_id ?? true);
     } catch {
       setError(t('order.error_loading'));
     } finally {
@@ -551,6 +553,7 @@ export default function KmsOrderPage() {
         isOpen={showSummary}
         onClose={() => setShowSummary(false)}
         onOrderPlaced={handleOrderPlaced}
+        customerHasGrippId={customerHasGrippId}
       />
     </>
   );

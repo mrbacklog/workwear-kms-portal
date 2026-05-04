@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, isPasskeyHost } from '../lib/kms-theme';
 import { isPasskeyAvailable, registerPasskey } from '../lib/kms-passkey';
 
 const DISMISSED_KEY = 'kms_passkey_dismissed';
@@ -17,11 +17,12 @@ export function PasskeyPrompt({ authToken, onDismiss }: PasskeyPromptProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || !isPasskeyHost) return;
     void isPasskeyAvailable().then(setAvailable);
   }, [dismissed]);
 
-  if (!available || dismissed) return null;
+  // Passkey-registratie werkt alleen op de WebAuthn RP-host (zie kms-theme.ts).
+  if (!isPasskeyHost || !available || dismissed) return null;
 
   function handleDismiss() {
     localStorage.setItem(DISMISSED_KEY, '1');

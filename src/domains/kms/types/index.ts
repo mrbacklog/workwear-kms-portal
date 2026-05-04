@@ -44,6 +44,7 @@ export interface KmsPortalProduct {
 export interface KmsPortalProductList {
   products: KmsPortalProduct[];
   customer_name: string;
+  customer_has_gripp_id: boolean;
 }
 
 export interface CartItem {

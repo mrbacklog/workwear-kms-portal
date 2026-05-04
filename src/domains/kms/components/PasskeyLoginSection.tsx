@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, isPasskeyHost } from '../lib/kms-theme';
 import { isPasskeyAvailable, authenticateWithPasskey } from '../lib/kms-passkey';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import type { KmsAuthResponse } from '../types';
@@ -15,10 +15,14 @@ export function PasskeyLoginSection({ onSuccess }: PasskeyLoginSectionProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isPasskeyHost) return;
     void isPasskeyAvailable().then(setAvailable);
   }, []);
 
-  if (!available) return null;
+  // Passkeys zijn gebonden aan WebAuthn RP_ID (zie kms-theme.ts). Op andere
+  // portal-hosts (bijv. kleding.vankruiningen.nl) zou registratie/login direct
+  // falen, dus tonen we de UI niet.
+  if (!isPasskeyHost || !available) return null;
 
   async function handlePasskeyLogin() {
     setLoading(true);

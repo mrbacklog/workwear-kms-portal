@@ -9,6 +9,7 @@ interface OrderSummaryProps {
   isOpen: boolean;
   onClose: () => void;
   onOrderPlaced: (order: KmsOrderResponse) => void;
+  customerHasGrippId: boolean;
 }
 
 function formatPrice(cents: number): string {
@@ -22,6 +23,7 @@ export function OrderSummary({
   isOpen,
   onClose,
   onOrderPlaced,
+  customerHasGrippId,
 }: OrderSummaryProps) {
   const { t } = useContext(BolusModeContext);
   const [reference, setReference] = useState('');
@@ -434,6 +436,22 @@ export function OrderSummary({
             flexShrink: 0,
           }}
         >
+          {!customerHasGrippId && (
+            <div
+              style={{
+                marginBottom: '12px',
+                padding: '10px 12px',
+                borderRadius: '6px',
+                backgroundColor: kmsColors.warningBg,
+                border: `1px solid ${kmsColors.warningBorder}`,
+                fontSize: '13px',
+                color: kmsColors.warningText,
+                fontFamily: kmsFont,
+              }}
+            >
+              <strong>Let op:</strong> Voor deze klant kan geen Gripp-offerte worden aangemaakt. Voeg een Gripp-klant-ID toe via de klantinstellingen.
+            </div>
+          )}
           <button
             onClick={() => void handleSubmit()}
             disabled={submitting || cart.items.length === 0}

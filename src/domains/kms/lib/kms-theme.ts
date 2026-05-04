@@ -31,6 +31,9 @@ export const kmsColors = {
   error: '#DC2626',
   errorBg: 'rgba(220,38,38,0.1)',
   successBg: 'rgba(0,136,56,0.12)',
+  warningBg: '#fffbeb',
+  warningBorder: '#fcd34d',
+  warningText: '#92400e',
 } as const;
 
 export const kmsFont = "'Poppins', sans-serif";
@@ -119,11 +122,28 @@ export function colorNameToHex(colorName: string): string {
   return `hsl(${h}, 40%, 40%)`;
 }
 
-/** Default slug when running on kms.databiz.app (no slug in URL) */
+/** Default slug when running on a portal host (no slug in URL) */
 export const KMS_DEFAULT_SLUG = 'vankruiningen';
 
-/** True when running on the KMS portal domain */
-export const isKmsPortal = window.location.hostname === 'kms.databiz.app';
+/** Hostnames that serve the dedicated KMS portal bundle (geen slug in URL). */
+const KMS_PORTAL_HOSTS: ReadonlySet<string> = new Set([
+  'kms.databiz.app',
+  'kleding.vankruiningen.nl',
+]);
+
+/** True when running on a KMS portal hostname (one of {@link KMS_PORTAL_HOSTS}). */
+export const isKmsPortal = KMS_PORTAL_HOSTS.has(window.location.hostname);
+
+/**
+ * Hostname die overeenkomt met de WebAuthn RP_ID in de backend
+ * (`KMS_WEBAUTHN_RP_ID`). Passkeys werken alleen op deze host — op andere
+ * portal-hosts (bijv. kleding.vankruiningen.nl) verbergen we de passkey-UI
+ * en valt de gebruiker terug op magic-link.
+ */
+const KMS_PASSKEY_HOST = 'kms.databiz.app';
+
+/** True wanneer passkeys (WebAuthn) bruikbaar zijn op de huidige host. */
+export const isPasskeyHost = window.location.hostname === KMS_PASSKEY_HOST;
 
 /** API base URL — on portal domain, calls go to api.databiz.app */
 export const kmsApiBase = isKmsPortal ? 'https://api.databiz.app' : '';

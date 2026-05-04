@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { captureScreenWithout, uploadScreenshot } from '../lib/kms-screenshot';
 
 type FeedbackType = 'bug' | 'improvement' | 'feature'
 type FeedbackPriority = 'critical' | 'high' | 'medium' | 'low'
@@ -36,6 +37,12 @@ export function FeedbackDrawer() {
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const [screenshotBlob, setScreenshotBlob] = useState<Blob | null>(null)
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
+  const [capturing, setCapturing] = useState(false)
+  const capturingRef = useRef(false)
+  const [captureError, setCaptureError] = useState<string | null>(null)
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
@@ -47,6 +54,25 @@ export function FeedbackDrawer() {
     setPriority('medium')
     setSubmitted(false)
     setSubmitError(null)
+    setScreenshotBlob(null)
+    setScreenshotPreview(null)
+    setCaptureError(null)
+  }, [])
+
+  const handleCapture = useCallback(async () => {
+    if (capturingRef.current) return
+    capturingRef.current = true
+    setCapturing(true)
+    setCaptureError(null)
+    const result = await captureScreenWithout(drawerRef.current)
+    capturingRef.current = false
+    setCapturing(false)
+    if (result) {
+      setScreenshotBlob(result.blob)
+      setScreenshotPreview(result.dataUrl)
+    } else {
+      setCaptureError('Schermafbeelding mislukt. Probeer opnieuw.')
+    }
   }, [])
 
   const handleClose = useCallback(() => {
@@ -85,6 +111,14 @@ export function FeedbackDrawer() {
         setSubmitError('Versturen mislukt. Probeer het opnieuw.')
         return
       }
+      const created = await res.json() as { id: string }
+      const capturedBlob = screenshotBlob   // bewaar lokale referentie vóór reset
+      setScreenshotBlob(null)
+      setScreenshotPreview(null)
+      setCaptureError(null)
+      if (capturedBlob) {
+        void uploadScreenshot(created.id, capturedBlob, API_BASE)
+      }
       setSubmitted(true)
       timerRef.current = setTimeout(handleClose, 1800)
     } catch {
@@ -112,6 +146,7 @@ export function FeedbackDrawer() {
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
         role="dialog"
         aria-label="Feedback geven"
         aria-modal="true"
@@ -222,6 +257,51 @@ export function FeedbackDrawer() {
             padding: '12px 16px', borderTop: `1px solid ${kmsColors.border}`,
             display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0,
           }}>
+            {/* Screenshot sectie */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 600, color: kmsColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                Schermafbeelding <span style={{ textTransform: 'none', fontWeight: 400 }}>(optioneel)</span>
+              </p>
+              {screenshotPreview ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid #333', borderRadius: 6, padding: '6px 8px', background: '#111' }}>
+                  <img src={screenshotPreview} alt="Screenshot preview" style={{ width: 64, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid #333', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 11, color: kmsColors.text, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>screenshot.png</p>
+                    <button
+                      type="button"
+                      aria-label="Screenshot verwijderen"
+                      onClick={() => { setScreenshotBlob(null); setScreenshotPreview(null); setCaptureError(null) }}
+                      style={{ fontSize: 11, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: kmsFont }}
+                    >
+                      Verwijderen
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCapture}
+                    disabled={capturing}
+                    style={{
+                      width: '100%', padding: '7px 12px', fontSize: 11, fontWeight: 600,
+                      borderRadius: 6, border: '2px dashed #333',
+                      background: 'transparent',
+                      color: capturing ? kmsColors.textMuted : kmsColors.textMuted,
+                      cursor: capturing ? 'not-allowed' : 'pointer',
+                      fontFamily: kmsFont, transition: 'all 150ms ease',
+                      opacity: capturing ? 0.5 : 1,
+                    }}
+                  >
+                    <span aria-hidden="true">📷</span> {capturing ? 'Bezig...' : 'Scherm vastleggen'}
+                  </button>
+                  {captureError && (
+                    <p style={{ fontSize: 11, color: '#ef4444', margin: '4px 0 0' }}>{captureError}</p>
+                  )}
+                </>
+              )}
+            </div>
+
             {submitError && (
               <p style={{ fontSize: 12, color: '#ef4444', background: '#ef444415', border: '1px solid #ef444430', borderRadius: 6, padding: '6px 10px', margin: 0 }}>
                 {submitError}
