@@ -38,8 +38,13 @@ export function KmsLayout({ children, customerName, isStaff, selectedCustomer, o
         rel="stylesheet"
       />
 
-      {/* Gradient bar keyframe */}
+      {/* Gradient bar keyframe + body reset (KMS portal repo heeft geen index.css) */}
       <style>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          background: ${kmsColors.bg};
+        }
         @keyframes kms-gradient-flow {
           0%   { background-position: 0% 50%; }
           100% { background-position: 200% 50%; }
