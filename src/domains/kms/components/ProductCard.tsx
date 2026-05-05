@@ -87,19 +87,40 @@ export function ProductCard({
           }}
         >
           {/* Thumbnail */}
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.model_name}
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 6,
-                objectFit: 'cover',
-                flexShrink: 0,
-                background: '#ffffff',
-              }}
-            />
+          {product.image ? (
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <img
+                src={product.image.url}
+                alt={product.model_name}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 6,
+                  objectFit: 'cover',
+                  background: '#ffffff',
+                  display: 'block',
+                }}
+              />
+              {product.image.substitute_status === 'color_substitute' && product.image.substitute_color_name && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: 2,
+                    left: 2,
+                    right: 2,
+                    background: 'rgba(0,0,0,0.70)',
+                    color: '#fff',
+                    fontSize: 8,
+                    lineHeight: 1.2,
+                    padding: '2px 3px',
+                    borderRadius: 3,
+                    textAlign: 'center',
+                  }}
+                >
+                  Foto toont {product.image.substitute_color_name}
+                </span>
+              )}
+            </div>
           ) : (
             <div
               style={{

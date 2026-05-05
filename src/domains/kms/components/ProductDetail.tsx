@@ -180,18 +180,36 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
           {product && (
             <>
               {/* Product image */}
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.model_name}
-                  style={{
-                    width: '100%',
-                    aspectRatio: '4/3',
-                    objectFit: 'contain',
-                    background: '#ffffff',
-                    display: 'block',
-                  }}
-                />
+              {product.image ? (
+                <>
+                  <img
+                    src={product.image.url}
+                    alt={product.model_name}
+                    style={{
+                      width: '100%',
+                      aspectRatio: '4/3',
+                      objectFit: 'contain',
+                      background: '#ffffff',
+                      display: 'block',
+                    }}
+                  />
+                  {product.image.substitute_status === 'color_substitute' && product.image.substitute_color_name && (
+                    <p
+                      style={{
+                        margin: '8px 20px 0',
+                        padding: '8px 12px',
+                        background: 'rgba(180,120,0,0.15)',
+                        border: '1px solid rgba(241,142,0,0.3)',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        color: '#f5c060',
+                        fontFamily: kmsFont,
+                      }}
+                    >
+                      Let op: deze foto toont kleur <strong>{product.image.substitute_color_name}</strong> — een afbeelding van de gekozen kleur is nog niet beschikbaar.
+                    </p>
+                  )}
+                </>
               ) : (
                 <div
                   style={{
