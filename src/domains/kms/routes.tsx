@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import { KmsSpinner } from './components/KmsSpinner';
 
 const KmsAuthPage = lazy(() => import('./pages/KmsAuthPage'));
@@ -37,6 +37,7 @@ export function kmsPortalRoutes() {
       <Route path="/bestellen" element={withSuspense(<KmsOrderPage />)} />
       <Route path="/bevestiging" element={withSuspense(<KmsConfirmPage />)} />
       <Route path="/klanten" element={withSuspense(<KmsCustomerPickerPage />)} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </>
   );
 }
