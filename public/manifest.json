@@ -1,0 +1,26 @@
+{
+  "name": "KMS Bestelportaal",
+  "short_name": "KMS",
+  "description": "Van Kruiningen Reklame — KMS bestelportaal voor klantbestellingen",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/vk-logo-icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/vk-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
