@@ -101,25 +101,6 @@ export function ProductCard({
                   display: 'block',
                 }}
               />
-              {product.image.substitute_status === 'color_substitute' && product.image.substitute_color_name && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: 2,
-                    left: 2,
-                    right: 2,
-                    background: 'rgba(0,0,0,0.70)',
-                    color: '#fff',
-                    fontSize: 8,
-                    lineHeight: 1.2,
-                    padding: '2px 3px',
-                    borderRadius: 3,
-                    textAlign: 'center',
-                  }}
-                >
-                  Foto toont {product.image.substitute_color_name}
-                </span>
-              )}
             </div>
           ) : (
             <div

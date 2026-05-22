@@ -29,14 +29,10 @@ export interface KmsPortalVariant {
   price_cents: number | null;
 }
 
-export type SubstituteStatus = 'exact' | 'color_substitute';
-
-export interface KmsImageWithFallback {
+export interface KmsImage {
   url: string;
   sequence_number: number;
   is_cover: boolean;
-  substitute_status: SubstituteStatus;
-  substitute_color_name: string | null;
 }
 
 export interface KmsPortalProduct {
@@ -47,7 +43,7 @@ export interface KmsPortalProduct {
   color_secondary_hex: string | null;
   color_tertiary_hex: string | null;
   price_from_cents: number | null;
-  image: KmsImageWithFallback | null;
+  image: KmsImage | null;
   variants: KmsPortalVariant[];
 }
 
