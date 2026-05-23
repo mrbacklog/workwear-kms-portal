@@ -25,6 +25,25 @@ jobs:
         env:
           VITE_API_BASE_URL: https://api.databiz.app
 
+      # Defense-in-depth: blokkeer de deploy als de build per ongeluk
+      # volledige monorepo Workwear-code bevat i.p.v. de KMS-only portal.
+      # Markers gespiegeld van scripts/kms_sync_deploy.py in de monorepo.
+      - name: Guard — verifieer KMS-only build
+        run: |
+          set -e
+          HITS=0
+          for marker in "Workwear Platform" "Scherm te klein" "/assortment/brands"; do
+            if grep -rqF "$marker" dist/assets/; then
+              echo "::error::Contaminatie-marker gevonden in build: '$marker'"
+              HITS=$((HITS+1))
+            fi
+          done
+          if [ "$HITS" -ne 0 ]; then
+            echo "::error::Build bevat Workwear-platform-code — GEEN KMS-only build. Deploy geblokkeerd."
+            exit 1
+          fi
+          echo "Guard OK: dist is KMS-only (geen Workwear-markers)."
+
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name=workwear-kms-portal --branch main
         env:
