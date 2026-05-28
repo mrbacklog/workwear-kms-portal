@@ -18,6 +18,26 @@ function formatPrice(cents: number): string {
   );
 }
 
+function formatErrorDetail(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((d) => {
+        if (d && typeof d === 'object' && 'msg' in d) {
+          const loc = Array.isArray((d as { loc?: unknown }).loc)
+            ? ((d as { loc: unknown[] }).loc).slice(1).join('.')
+            : '';
+          const msg = String((d as { msg: unknown }).msg);
+          return loc ? `${loc}: ${msg}` : msg;
+        }
+        return '';
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join('; ');
+  }
+  return fallback;
+}
+
 export function OrderSummary({
   cart,
   isOpen,
@@ -79,10 +99,11 @@ export function OrderSummary({
 
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => ({}));
-        const detail =
+        const rawDetail =
           data && typeof data === 'object' && 'detail' in data
-            ? String((data as Record<string, unknown>).detail)
-            : `HTTP ${res.status}`;
+            ? (data as Record<string, unknown>).detail
+            : undefined;
+        const detail = formatErrorDetail(rawDetail, `HTTP ${res.status}`);
         throw new Error(detail);
       }
 
