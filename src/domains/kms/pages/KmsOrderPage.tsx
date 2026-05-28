@@ -5,6 +5,7 @@ import { useKmsAuth } from '../hooks/useKmsAuth';
 import { useKmsStaffContext } from '../hooks/useKmsStaffContext';
 import { useCart } from '../hooks/useCart';
 import { ProductCard } from '../components/ProductCard';
+import { GrippProductCard } from '../components/GrippProductCard';
 import { CartBar } from '../components/CartBar';
 import { ProductDetail } from '../components/ProductDetail';
 import { OrderSummary } from '../components/OrderSummary';
@@ -100,7 +101,7 @@ export default function KmsOrderPage() {
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { cart, setQuantity, clearCart } = useCart();
+  const { cart, setQuantity, setGrippQuantity, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
   async function fetchProducts() {
@@ -511,6 +512,24 @@ export default function KmsOrderPage() {
             {filteredProducts.map((product, index) => {
               // Use a stable key combining brand+model+color
               const key = `${product.brand_name}-${product.model_name}-${product.color}-${index}`;
+
+              if (product.source === 'gripp' && product.gripp_product_id) {
+                return (
+                  <GrippProductCard
+                    key={key}
+                    product={product}
+                    index={index}
+                    cart={cart}
+                    onQuantityChange={(grippProductId, quantity) => {
+                      setGrippQuantity(grippProductId, quantity, {
+                        modelName: product.model_name,
+                        priceCents: product.price_from_cents ?? 0,
+                      });
+                    }}
+                  />
+                );
+              }
+
               return (
                 <ProductCard
                   key={key}

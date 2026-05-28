@@ -59,10 +59,12 @@ export function OrderSummary({
 
     try {
       const body = {
-        lines: cart.items.map((item) => ({
-          product_variant_id: item.variantId,
-          quantity: item.quantity,
-        })),
+        lines: cart.items.map((item) => {
+          if (item.grippProductId) {
+            return { gripp_product_id: item.grippProductId, quantity: item.quantity };
+          }
+          return { product_variant_id: item.variantId, quantity: item.quantity };
+        }),
         reference: reference.trim() || undefined,
         notes: notes.trim() || undefined,
       };
@@ -254,17 +256,36 @@ export function OrderSummary({
                       gap: 4,
                     }}
                   >
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: kmsColors.cyan,
-                        flexShrink: 0,
-                      }}
-                    />
-                    {item.color} &middot; {t('summary.size')} {item.size}
+                    {item.grippProductId ? (
+                      <>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: kmsColors.orange,
+                            opacity: 0.6,
+                            flexShrink: 0,
+                          }}
+                        />
+                        per stuk
+                      </>
+                    ) : (
+                      <>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: kmsColors.cyan,
+                            flexShrink: 0,
+                          }}
+                        />
+                        {item.color} &middot; {t('summary.size')} {item.size}
+                      </>
+                    )}
                   </div>
                 </div>
                 <div

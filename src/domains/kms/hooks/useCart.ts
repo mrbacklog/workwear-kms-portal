@@ -17,13 +17,21 @@ interface AddItemParams {
   priceCents: number;
 }
 
+interface AddGrippItemParams {
+  grippProductId: string;
+  modelName: string;
+  priceCents: number;
+}
+
 interface UseCartReturn {
   cart: CartState;
   addItem: (params: AddItemParams) => void;
   removeItem: (variantId: string) => void;
   setQuantity: (variantId: string, quantity: number, meta?: Omit<AddItemParams, 'variantId'>) => void;
+  setGrippQuantity: (grippProductId: string, quantity: number, meta?: Omit<AddGrippItemParams, 'grippProductId'>) => void;
   clearCart: () => void;
   getQuantityForVariant: (variantId: string) => number;
+  getQuantityForGripp: (grippProductId: string) => number;
 }
 
 export function useCart(): UseCartReturn {
@@ -90,9 +98,46 @@ export function useCart(): UseCartReturn {
     setItems([]);
   }, []);
 
+  const setGrippQuantity = useCallback((grippProductId: string, quantity: number, meta?: Omit<AddGrippItemParams, 'grippProductId'>) => {
+    setItems((prev) => {
+      if (quantity <= 0) {
+        return prev.filter((item) => item.grippProductId !== grippProductId);
+      }
+      const existing = prev.find((item) => item.grippProductId === grippProductId);
+      if (existing) {
+        return prev.map((item) =>
+          item.grippProductId === grippProductId ? { ...item, quantity } : item,
+        );
+      }
+      if (meta) {
+        return [
+          ...prev,
+          {
+            variantId: `gripp:${grippProductId}`,
+            grippProductId,
+            modelName: meta.modelName,
+            color: '',
+            size: '',
+            ean: '',
+            quantity,
+            priceCents: meta.priceCents,
+          },
+        ];
+      }
+      return prev;
+    });
+  }, []);
+
   const getQuantityForVariant = useCallback(
     (variantId: string): number => {
       return items.find((item) => item.variantId === variantId)?.quantity ?? 0;
+    },
+    [items],
+  );
+
+  const getQuantityForGripp = useCallback(
+    (grippProductId: string): number => {
+      return items.find((item) => item.grippProductId === grippProductId)?.quantity ?? 0;
     },
     [items],
   );
@@ -105,5 +150,5 @@ export function useCart(): UseCartReturn {
     totalCents: totals.totalCents,
   };
 
-  return { cart, addItem, removeItem, setQuantity, clearCart, getQuantityForVariant };
+  return { cart, addItem, removeItem, setQuantity, setGrippQuantity, clearCart, getQuantityForVariant, getQuantityForGripp };
 }

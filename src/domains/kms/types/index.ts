@@ -45,6 +45,10 @@ export interface KmsPortalProduct {
   price_from_cents: number | null;
   image: KmsImage | null;
   variants: KmsPortalVariant[];
+  /** Present for all items from the portal API (backend Task 5/6). */
+  source?: 'clothing' | 'gripp';
+  /** Set when source === 'gripp'. UUID of the gripp_product row. */
+  gripp_product_id?: string | null;
 }
 
 export interface KmsPortalProductList {
@@ -61,6 +65,8 @@ export interface CartItem {
   ean: string;
   quantity: number;
   priceCents: number;
+  /** Set for Gripp items (no variant/size/EAN). */
+  grippProductId?: string;
 }
 
 export interface CartState {
@@ -70,7 +76,10 @@ export interface CartState {
 }
 
 export interface KmsOrderLine {
-  product_variant_id: string;
+  /** Set for regular clothing variants. */
+  product_variant_id?: string;
+  /** Set for Gripp-catalogue items (no EAN/variant). */
+  gripp_product_id?: string;
   quantity: number;
 }
 
