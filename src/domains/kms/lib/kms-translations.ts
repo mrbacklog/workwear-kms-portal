@@ -87,13 +87,6 @@ export const translations = {
     'verify.error_title': 'Link ongeldig',
     'verify.back': 'Terug naar aanmelden',
 
-    // PasskeyLoginSection
-    'passkey.error': 'Inloggen met passkey mislukt. Gebruik uw e-mailadres.',
-    'passkey.loading': 'Even geduld...',
-    'passkey.button': 'Inloggen met passkey',
-    'passkey.hint': 'Gezicht, vingerafdruk of pincode',
-    'passkey.divider': 'of',
-
     // Auth errors
     'auth.error_generic': 'Er is een fout opgetreden. Probeer het opnieuw.',
 
@@ -204,13 +197,6 @@ export const translations = {
     'verify.error_connection': "'t Lukt nie om te verbinden. Prebeer 't noh 's.",
     'verify.error_title': "Link is nie hoed",
     'verify.back': "Vromme ni aanmelden",
-
-    // PasskeyLoginSection
-    'passkey.error': "Inloggen met passkey lukt nie. Doen joe mail mî.",
-    'passkey.loading': "'n Moment...",
-    'passkey.button': "Inloggen met passkey",
-    'passkey.hint': "Ezicht, vingerofdruk of pinkode",
-    'passkey.divider': "of",
 
     // Auth errors
     'auth.error_generic': "'t Hink mis. Prebeer 't noh 's.",

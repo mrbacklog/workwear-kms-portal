@@ -27,7 +27,7 @@ export function kmsRoutes() {
   );
 }
 
-/** Portal routes for kms.databiz.app — no /kms/ prefix, slug from config */
+/** Portal routes voor het KMS-portaaldomein (bestellen.vankruiningen.nl) — no /kms/ prefix, slug from config */
 export function kmsPortalRoutes() {
   return (
     <>

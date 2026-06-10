@@ -2,7 +2,6 @@ import { useEffect, useRef, useContext } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
 import { useKmsAuth } from '../hooks/useKmsAuth';
-import { PasskeyPrompt } from '../components/PasskeyPrompt';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
@@ -102,7 +101,7 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 export default function KmsConfirmPage() {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const location = useLocation();
-  const { customerName, customerSlug, token, logout } = useKmsAuth();
+  const { customerName, customerSlug, logout } = useKmsAuth();
   const slug = urlSlug || customerSlug || KMS_DEFAULT_SLUG;
   const { t } = useContext(BolusModeContext);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -332,13 +331,6 @@ export default function KmsConfirmPage() {
               }}
             >
               {t('confirm.reference_label')} <strong style={{ color: kmsColors.textSecondary }}>{order.reference}</strong>
-            </div>
-          )}
-
-          {/* Passkey prompt */}
-          {token && (
-            <div style={{ width: '100%', maxWidth: 320 }}>
-              <PasskeyPrompt authToken={token} />
             </div>
           )}
 

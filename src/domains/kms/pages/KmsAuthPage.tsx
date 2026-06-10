@@ -1,17 +1,15 @@
 import { useState, useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { KmsLayout } from '../components/KmsLayout';
-import { PasskeyLoginSection } from '../components/PasskeyLoginSection';
 import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, kmsApiBase, isKmsPortal } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { useKmsAuth } from '../hooks/useKmsAuth';
-import type { KmsAuthResponse } from '../types';
 
 export default function KmsAuthPage() {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const slug = urlSlug || KMS_DEFAULT_SLUG;
   const { t } = useContext(BolusModeContext);
-  const { login, isAuthenticated, isStaff } = useKmsAuth();
+  const { isAuthenticated, isStaff } = useKmsAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,15 +26,6 @@ export default function KmsAuthPage() {
       }
     }
   }, [isAuthenticated, isStaff, navigate, slug]);
-
-  function handlePasskeySuccess(authResponse: KmsAuthResponse) {
-    login(authResponse);
-    if (authResponse.is_staff) {
-      navigate(isKmsPortal ? '/klanten' : `/kms/${slug}/klanten`, { replace: true });
-    } else {
-      navigate(isKmsPortal ? '/bestellen' : `/kms/${slug}/bestellen`, { replace: true });
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,17 +111,6 @@ export default function KmsAuthPage() {
             >
               {t('auth.description')}
             </p>
-
-            <div
-              style={{
-                textAlign: 'left',
-                maxWidth: 400,
-                margin: '0 auto',
-                animation: 'kms-fade-up 400ms ease 650ms both',
-              }}
-            >
-              <PasskeyLoginSection onSuccess={handlePasskeySuccess} />
-            </div>
 
             <form
               onSubmit={handleSubmit}
