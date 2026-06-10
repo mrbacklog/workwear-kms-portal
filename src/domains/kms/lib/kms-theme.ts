@@ -128,6 +128,7 @@ export const KMS_DEFAULT_SLUG = 'vankruiningen';
 /** Hostnames that serve the dedicated KMS portal bundle (geen slug in URL). */
 const KMS_PORTAL_HOSTS: ReadonlySet<string> = new Set([
   'kms.databiz.app',
+  'bestellen.vankruiningen.nl',
   'kleding.vankruiningen.nl',
 ]);
 
