@@ -96,6 +96,20 @@ export default function KmsAuthPage() {
           {t('auth.welcome_title')}
         </h1>
 
+        <p
+          style={{
+            fontFamily: kmsFont,
+            fontSize: 15,
+            color: kmsColors.textSecondary,
+            marginTop: 8,
+            marginBottom: 0,
+            lineHeight: 1.6,
+            animation: 'kms-fade-up 400ms ease 450ms both',
+          }}
+        >
+          {t('auth.subtitle')}
+        </p>
+
         {!submitted ? (
           <>
             <p
@@ -221,6 +235,35 @@ export default function KmsAuthPage() {
                 )}
               </button>
             </form>
+
+            <div
+              style={{
+                marginTop: 40,
+                paddingTop: 24,
+                borderTop: `1px solid ${kmsColors.border}`,
+                textAlign: 'center',
+                animation: 'kms-fade-up 400ms ease 800ms both',
+              }}
+            >
+              <p style={{ fontFamily: kmsFont, fontSize: 13, fontWeight: 600, color: kmsColors.textSecondary, marginBottom: 4 }}>
+                {t('auth.no_email_title')}
+              </p>
+              <p style={{ fontFamily: kmsFont, fontSize: 13, color: kmsColors.textMuted, marginBottom: 8 }}>
+                {t('auth.no_email_body')}
+              </p>
+              <p style={{ fontFamily: kmsFont, fontSize: 14, fontWeight: 600, color: kmsColors.text, marginBottom: 2 }}>
+                {t('auth.contact_phone')}
+              </p>
+              <a
+                href={`mailto:${t('auth.contact_email')}`}
+                style={{ fontFamily: kmsFont, fontSize: 13, color: kmsColors.cyan, textDecoration: 'none', display: 'block', marginBottom: 8 }}
+              >
+                {t('auth.contact_email')}
+              </a>
+              <p style={{ fontFamily: kmsFont, fontSize: 12, color: kmsColors.textMuted }}>
+                {t('auth.contact_note')}
+              </p>
+            </div>
           </>
         ) : (
           <div

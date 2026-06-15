@@ -55,12 +55,18 @@ export const translations = {
     'summary.cancel': 'Annuleren, ga terug',
 
     // Auth
-    'auth.welcome_prefix': 'Welkom bij uw',
-    'auth.welcome_title': 'Bestelportaal',
+    'auth.welcome_prefix': 'Welkom bij ons',
+    'auth.welcome_title': 'vernieuwde bestelportaal',
+    'auth.subtitle': 'Hier kunt u eenvoudig uw bedrijfskleding nabestellen.',
     'auth.description': 'Voer uw e-mailadres in en we sturen u een toegangslink.',
     'auth.email_label': 'E-mailadres',
     'auth.submitting': 'Versturen...',
     'auth.success': 'Check uw inbox — u ontvangt binnen enkele minuten een link.',
+    'auth.no_email_title': 'Geen mail ontvangen?',
+    'auth.no_email_body': 'Neem dan contact met ons op',
+    'auth.contact_phone': '0113-573237',
+    'auth.contact_email': 'kleding@vankruiningen.nl',
+    'auth.contact_note': 'Dan zorgen we ervoor dat uw e-mailadres wordt toegevoegd.',
 
     // Order page
     'order.error_loading': 'Er ging iets mis bij het laden van de producten.',
@@ -165,18 +171,24 @@ export const translations = {
     'summary.submit': "Bestel mî!",
     'summary.cancel': "Lî mî zitte",
 
+    // Order page
+    'order.error_loading': "'t Hink mis bie 't laden van de producten.",
+    'order.error_title': "'t Hink mis",
+    'order.retry': "Prebeer 't noh 's",
+
     // Auth
-    'auth.welcome_prefix': "Welkom bie joe",
-    'auth.welcome_title': "Bestelportihl",
+    'auth.welcome_prefix': "Welkom bie ons",
+    'auth.welcome_title': "vernieuwde bestelportihl",
+    'auth.subtitle': "Hier kunt je emmokkelijk je bedrijfskleding nabestellen.",
     'auth.description': "Doe je mail d'rin en je kriegt een link estiere.",
+    'auth.no_email_title': "Hin mail ekregn?",
+    'auth.no_email_body': "Nim dan kontakt op",
+    'auth.contact_phone': "0113-573237",
+    'auth.contact_email': "kleding@vankruiningen.nl",
+    'auth.contact_note': "Dan zorgen we d'rvoe dat je mail d'rbie komt.",
     'auth.email_label': "E-mail",
     'auth.submitting': "Stieren...",
     'auth.success': "Kiek in je mail — je kriegt subiet een link.",
-
-    // Order page
-    'order.error_loading': "'t Hink mis bie 't laden.",
-    'order.error_title': "'t Hink mis",
-    'order.retry': "Prebeer 't noh 's",
     'order.no_results': "Niks evonden",
     'order.no_products': "D'r is niks",
     'order.no_results_for': "Niks evonden voe",
