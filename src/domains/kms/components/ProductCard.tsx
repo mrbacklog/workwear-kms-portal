@@ -1,7 +1,6 @@
-import { useContext } from 'react';
+
 import type { KmsPortalProduct, CartState } from '../types';
 import { kmsColors, kmsFont, colorNameToHex } from '../lib/kms-theme';
-import { BolusModeContext } from '../lib/kms-bolus-context';
 import { SizeSelector } from './SizeSelector';
 import { ColorSwatch } from './ColorSwatch';
 
@@ -31,7 +30,6 @@ export function ProductCard({
   onQuantityChange,
   index,
 }: ProductCardProps) {
-  const { t } = useContext(BolusModeContext);
   const selectedQuantity = product.variants.reduce((sum, variant) => {
     return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
   }, 0);
