@@ -166,7 +166,7 @@ export function ProductCard({
                   fontFamily: kmsFont,
                 }}
               >
-                {t('product.price_from')} {formatPrice(product.price_from_cents)}
+                {formatPrice(product.price_from_cents)}
               </div>
             )}
           </div>

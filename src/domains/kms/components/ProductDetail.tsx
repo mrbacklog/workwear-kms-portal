@@ -270,30 +270,16 @@ export function ProductDetail({ product, isOpen, onClose }: ProductDetailProps) 
 
                 {/* Price */}
                 {product.price_from_cents != null && (
-                  <div
-                    style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}
+                  <span
+                    style={{
+                      fontSize: 28,
+                      fontWeight: 800,
+                      color: kmsColors.orange,
+                      fontFamily: kmsFont,
+                    }}
                   >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: kmsColors.textMuted,
-                        fontWeight: 500,
-                        fontFamily: kmsFont,
-                      }}
-                    >
-                      {t('detail.price_from')}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 28,
-                        fontWeight: 800,
-                        color: kmsColors.orange,
-                        fontFamily: kmsFont,
-                      }}
-                    >
-                      {formatPrice(product.price_from_cents)}
-                    </span>
-                  </div>
+                    {formatPrice(product.price_from_cents)}
+                  </span>
                 )}
 
                 {/* Available sizes */}
