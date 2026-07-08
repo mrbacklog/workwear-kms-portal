@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
-import { ConfirmDialog } from '@/shared/ui/components/confirm-dialog';
+import { KmsConfirmDialog } from './KmsConfirmDialog';
 import type { KmsPerson } from '../types';
 
 interface PersonTagPickerProps {
@@ -243,7 +243,7 @@ export function PersonTagPicker({
         </div>
       )}
 
-      <ConfirmDialog
+      <KmsConfirmDialog
         open={pendingUntag !== null}
         title="Persoon van regel verwijderen"
         description={
@@ -262,7 +262,7 @@ export function PersonTagPicker({
         onCancel={() => setPendingUntag(null)}
       />
 
-      <ConfirmDialog
+      <KmsConfirmDialog
         open={pendingDelete !== null}
         title="Persoon definitief verwijderen"
         description={
