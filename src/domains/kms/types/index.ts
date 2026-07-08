@@ -86,6 +86,20 @@ export interface KmsPerson {
   created_at?: string;
 }
 
+/** Eén (ean, maat, persoon)-combinatie uit de bestelhistorie — voor herhaalbestellen/filter. */
+export interface KmsPersonHistoryRecord {
+  ean: string;
+  size: string;
+  person_id: string;
+  person_name: string;
+  qty: number;
+  last_ordered_at: string;
+}
+
+export interface KmsPersonHistoryResponse {
+  history: KmsPersonHistoryRecord[];
+}
+
 export interface CartState {
   items: CartItem[];
   totalItems: number;

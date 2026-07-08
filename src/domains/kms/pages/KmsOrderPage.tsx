@@ -13,7 +13,11 @@ import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal, kmsApiBase, groupIdT
 import { kmsAuthFetch } from '../lib/kms-auth-fetch';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { usePwaInstall } from '../hooks/usePwaInstall';
-import type { KmsPortalProduct, KmsPortalProductList, KmsOrderResponse } from '../types';
+import { useKmsPersons } from '../hooks/useKmsPersons';
+import { useKmsOrderHistory } from '../hooks/useKmsOrderHistory';
+import { KmsPersonSheet } from '../components/KmsPersonSheet';
+import { formatShortName } from '../lib/kms-theme';
+import type { KmsPortalProduct, KmsPortalProductList, KmsOrderResponse, KmsPerson, KmsPersonHistoryRecord } from '../types';
 
 // Skeleton loader for a single product card
 function CardSkeleton() {
@@ -101,8 +105,12 @@ export default function KmsOrderPage() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [personFilter, setPersonFilter] = useState<string | null>(null);
+  const [personFilterSheetOpen, setPersonFilterSheetOpen] = useState(false);
+  const { persons, createPerson } = useKmsPersons();
+  const { history } = useKmsOrderHistory();
 
-  const { cart, setQuantity, setGrippQuantity, setPersonsForItem, clearCart } = useCart();
+  const { cart, setQuantity, setGrippQuantity, setPersonsForItem, addPersonToLine, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
   async function fetchProducts() {
@@ -150,19 +158,40 @@ export default function KmsOrderPage() {
 
   const allGroupIds = useMemo(() => availableGroups.map((g) => g.id), [availableGroups]);
 
+  const historyByEan = useMemo(() => {
+    const map = new Map<string, KmsPersonHistoryRecord[]>();
+    for (const record of history) {
+      const list = map.get(record.ean) ?? [];
+      list.push(record);
+      map.set(record.ean, list);
+    }
+    return map;
+  }, [history]);
+
+  const selectedFilterPerson = useMemo(
+    () => (personFilter ? persons.find((p) => p.id === personFilter) ?? null : null),
+    [personFilter, persons],
+  );
+
   const filteredProducts = useMemo(() => {
     const byGroup =
       activeGroupTab === 'all'
         ? products
         : products.filter((p) => (p.groups ?? []).some((g) => g.id === activeGroupTab));
 
-    if (!searchQuery.trim()) return byGroup;
+    const byPerson = personFilter
+      ? byGroup.filter((p) =>
+          p.variants.some((v) => (historyByEan.get(v.ean) ?? []).some((h) => h.person_id === personFilter)),
+        )
+      : byGroup;
+
+    if (!searchQuery.trim()) return byPerson;
     const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return byGroup.filter((p) => {
+    return byPerson.filter((p) => {
       const text = `${p.brand_name} ${p.model_name} ${p.color}`.toLowerCase();
       return words.every((word) => text.includes(word));
     });
-  }, [products, searchQuery, activeGroupTab]);
+  }, [products, searchQuery, activeGroupTab, personFilter, historyByEan]);
 
   function handleToggle(index: number) {
     setExpandedIndex((prev) => (prev === index ? null : index));
@@ -307,6 +336,43 @@ export default function KmsOrderPage() {
           </div>
         </div>
 
+        {/* Persoonsfilter-pill */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <button
+            onClick={() => setPersonFilterSheetOpen(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+              fontFamily: kmsFont, cursor: 'pointer',
+              background: selectedFilterPerson ? 'rgba(0,160,200,0.12)' : kmsColors.surface,
+              border: `1.5px solid ${selectedFilterPerson ? kmsColors.cyan : 'rgba(255,255,255,0.1)'}`,
+              color: selectedFilterPerson ? kmsColors.cyan : kmsColors.textSecondary,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {selectedFilterPerson ? formatShortName(selectedFilterPerson.name) : 'Filter op medewerker'}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {selectedFilterPerson && (
+            <button
+              onClick={() => setPersonFilter(null)}
+              aria-label="Filter wissen"
+              style={{
+                width: 26, height: 26, borderRadius: '50%',
+                background: kmsColors.surfaceHover, border: 'none',
+                color: kmsColors.textSecondary, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+
         {/* Indeling-tabs — alleen tonen als er tenminste 1 indeling bestaat */}
         {availableGroups.length > 0 && (
           <div
@@ -426,7 +492,9 @@ export default function KmsOrderPage() {
             fontFamily: kmsFont,
           }}
         >
-          {t('products.title')}
+          {selectedFilterPerson
+            ? `EERDER BESTELD VOOR ${formatShortName(selectedFilterPerson.name).toUpperCase()}`
+            : t('products.title')}
         </div>
 
         {/* Loading skeletons */}
@@ -538,13 +606,18 @@ export default function KmsOrderPage() {
               {searchQuery ? t('order.no_results') : t('order.no_products')}
             </div>
             <div style={{ fontSize: 14, color: kmsColors.textMuted, fontFamily: kmsFont }}>
-              {searchQuery
+              {selectedFilterPerson && !searchQuery
+                ? `Nog niets besteld voor ${formatShortName(selectedFilterPerson.name)}`
+                : searchQuery
                 ? `${t('order.no_results_for')} "${searchQuery}"`
                 : t('order.no_products_assigned')}
             </div>
-            {searchQuery && (
+            {(searchQuery || selectedFilterPerson) && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => {
+                  setSearchQuery('');
+                  setPersonFilter(null);
+                }}
                 style={{
                   marginTop: 16,
                   padding: '10px 20px',
@@ -606,6 +679,8 @@ export default function KmsOrderPage() {
                   onDetailClick={() => handleOpenDetail(product)}
                   cart={cart}
                   allGroupIds={allGroupIds}
+                  history={product.variants.flatMap((v) => historyByEan.get(v.ean) ?? [])}
+                  personFilter={personFilter}
                   onQuantityChange={(variantId, quantity) => {
                     const variant = product.variants.find(v => v.id === variantId);
                     setQuantity(variantId, quantity, variant ? {
@@ -615,6 +690,17 @@ export default function KmsOrderPage() {
                       ean: variant.ean ?? '',
                       priceCents: variant.price_cents ?? 0,
                     } : undefined);
+                  }}
+                  onRepeatHistoryTag={(variantId, qty, person: KmsPerson) => {
+                    const variant = product.variants.find((v) => v.id === variantId);
+                    if (!variant) return;
+                    addPersonToLine(variantId, qty, person, {
+                      modelName: `${product.brand_name} ${product.model_name}`,
+                      color: product.color,
+                      size: variant.size,
+                      ean: variant.ean ?? '',
+                      priceCents: variant.price_cents ?? 0,
+                    });
                   }}
                 />
               );
@@ -641,6 +727,21 @@ export default function KmsOrderPage() {
         onOrderPlaced={handleOrderPlaced}
         customerHasGrippId={customerHasGrippId}
         onPersonsChange={setPersonsForItem}
+        history={history}
+      />
+
+      <KmsPersonSheet
+        mode="filter"
+        isOpen={personFilterSheetOpen}
+        onClose={() => setPersonFilterSheetOpen(false)}
+        persons={persons}
+        history={history}
+        onCreatePerson={createPerson}
+        selectedPersonId={personFilter}
+        onSelectFilter={(id) => {
+          setPersonFilter(id);
+          setExpandedIndex(null);
+        }}
       />
     </>
   );

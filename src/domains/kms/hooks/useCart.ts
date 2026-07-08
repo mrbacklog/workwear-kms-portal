@@ -30,6 +30,12 @@ interface UseCartReturn {
   setQuantity: (variantId: string, quantity: number, meta?: Omit<AddItemParams, 'variantId'>) => void;
   setGrippQuantity: (grippProductId: string, quantity: number, meta?: Omit<AddGrippItemParams, 'grippProductId'>) => void;
   setPersonsForItem: (variantId: string, persons: KmsPerson[]) => void;
+  addPersonToLine: (
+    variantId: string,
+    qty: number,
+    person: KmsPerson,
+    meta: Omit<AddItemParams, 'variantId'>,
+  ) => void;
   clearCart: () => void;
   getQuantityForVariant: (variantId: string) => number;
   getQuantityForGripp: (grippProductId: string) => number;
@@ -103,6 +109,34 @@ export function useCart(): UseCartReturn {
     );
   }, []);
 
+  const addPersonToLine = useCallback(
+    (
+      variantId: string,
+      qty: number,
+      person: KmsPerson,
+      meta: Omit<AddItemParams, 'variantId'>,
+    ) => {
+      setItems((prev) => {
+        const existing = prev.find((item) => item.variantId === variantId);
+        if (existing) {
+          const currentPersons = existing.persons ?? [];
+          const alreadyTagged = currentPersons.some((p) => p.id === person.id);
+          return prev.map((item) =>
+            item.variantId === variantId
+              ? {
+                  ...item,
+                  quantity: item.quantity + qty,
+                  persons: alreadyTagged ? currentPersons : [...currentPersons, person],
+                }
+              : item,
+          );
+        }
+        return [...prev, { variantId, quantity: qty, persons: [person], ...meta }];
+      });
+    },
+    [],
+  );
+
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
@@ -159,5 +193,5 @@ export function useCart(): UseCartReturn {
     totalCents: totals.totalCents,
   };
 
-  return { cart, addItem, removeItem, setQuantity, setGrippQuantity, setPersonsForItem, clearCart, getQuantityForVariant, getQuantityForGripp };
+  return { cart, addItem, removeItem, setQuantity, setGrippQuantity, setPersonsForItem, addPersonToLine, clearCart, getQuantityForVariant, getQuantityForGripp };
 }

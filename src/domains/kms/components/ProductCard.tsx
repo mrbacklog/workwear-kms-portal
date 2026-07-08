@@ -1,6 +1,7 @@
 
-import type { KmsPortalProduct, CartState } from '../types';
-import { kmsColors, kmsFont, colorNameToHex, groupIdToColor } from '../lib/kms-theme';
+import { useState, useRef, useEffect } from 'react';
+import type { KmsPortalProduct, CartState, KmsPersonHistoryRecord, KmsPerson } from '../types';
+import { kmsColors, kmsFont, colorNameToHex, groupIdToColor, formatShortName, personInitials } from '../lib/kms-theme';
 import { SizeSelector } from './SizeSelector';
 import { ColorSwatch } from './ColorSwatch';
 
@@ -14,7 +15,15 @@ interface ProductCardProps {
   index?: number;
   /** Alle groep-ID's die momenteel zichtbaar zijn (voor consistente badge-kleuren). */
   allGroupIds?: string[];
+  /** Bestelhistorie voor de EAN's van dit product (al vooraf gescoped door KmsOrderPage). */
+  history?: KmsPersonHistoryRecord[];
+  /** Actief persoonsfilter — beperkt de getoonde tags en toont de maat-hint. */
+  personFilter?: string | null;
+  /** Herhaal-tag getikt: verhoog qty van deze variant + tag de persoon aan de regel. */
+  onRepeatHistoryTag?: (variantId: string, qty: number, person: KmsPerson) => void;
 }
+
+const TAG_LIMIT = 4;
 
 function formatPrice(cents: number): string {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(
@@ -32,7 +41,20 @@ export function ProductCard({
   onQuantityChange,
   index,
   allGroupIds = [],
+  history = [],
+  personFilter = null,
+  onRepeatHistoryTag,
 }: ProductCardProps) {
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+  const [addedKey, setAddedKey] = useState<string | null>(null);
+  const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    };
+  }, []);
+
   const selectedQuantity = product.variants.reduce((sum, variant) => {
     return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
   }, 0);
@@ -40,6 +62,31 @@ export function ProductCard({
   const hasSelection = selectedQuantity > 0;
   // colorHex als fallback voor de thumbnail placeholder
   const colorHex = product.color_primary_hex ?? colorNameToHex(product.color);
+
+  const visibleHistory = personFilter
+    ? history.filter((h) => h.person_id === personFilter)
+    : history;
+  const sortedHistory = [...visibleHistory].sort((a, b) =>
+    b.last_ordered_at.localeCompare(a.last_ordered_at),
+  );
+  const shownHistory = tagsExpanded ? sortedHistory : sortedHistory.slice(0, TAG_LIMIT);
+  const hiddenCount = sortedHistory.length - TAG_LIMIT;
+
+  const filterHint = personFilter
+    ? [...history]
+        .filter((h) => h.person_id === personFilter)
+        .sort((a, b) => b.last_ordered_at.localeCompare(a.last_ordered_at))[0]
+    : null;
+
+  function handleTagTap(record: KmsPersonHistoryRecord) {
+    const variant = product.variants.find((v) => v.ean === record.ean);
+    if (!variant || !onRepeatHistoryTag) return;
+    const key = `${record.ean}-${record.size}-${record.person_id}`;
+    onRepeatHistoryTag(variant.id, record.qty, { id: record.person_id, name: record.person_name });
+    if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    setAddedKey(key);
+    addedTimerRef.current = setTimeout(() => setAddedKey(null), 1600);
+  }
 
   return (
     <>
@@ -193,6 +240,11 @@ export function ProductCard({
                 })}
               </div>
             )}
+            {filterHint && (
+              <div style={{ fontSize: 11, fontWeight: 600, color: kmsColors.cyan, marginTop: 4, fontFamily: kmsFont }}>
+                {formatShortName(filterHint.person_name)} · vorige keer maat {filterHint.size}
+              </div>
+            )}
           </div>
 
           {/* Right side: badge + chevron */}
@@ -246,7 +298,7 @@ export function ProductCard({
         {/* Expanded body */}
         <div
           style={{
-            maxHeight: isExpanded ? 500 : 0,
+            maxHeight: isExpanded ? (tagsExpanded ? 900 : 620) : 0,
             overflow: 'hidden',
             transition: 'max-height 300ms ease-out',
           }}
@@ -257,6 +309,67 @@ export function ProductCard({
               borderTop: `1px solid ${kmsColors.border}`,
             }}
           >
+            {shownHistory.length > 0 && (
+              <div style={{ marginTop: 12, marginBottom: 4 }}>
+                <div
+                  style={{
+                    fontSize: 10, fontWeight: 600, color: kmsColors.textMuted,
+                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                    marginBottom: 6, fontFamily: kmsFont,
+                  }}
+                >
+                  Eerder besteld voor
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {shownHistory.map((record) => {
+                    const key = `${record.ean}-${record.size}-${record.person_id}`;
+                    const added = addedKey === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => handleTagTap(record)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '4px 10px 4px 4px', borderRadius: 999,
+                          fontSize: 12, fontWeight: 600, fontFamily: kmsFont, cursor: 'pointer',
+                          border: `1.5px solid ${added ? 'rgba(0,136,56,0.5)' : 'rgba(0,160,200,0.3)'}`,
+                          background: added ? 'rgba(0,136,56,0.15)' : 'rgba(0,160,200,0.08)',
+                          color: added ? '#3DDC84' : kmsColors.cyan,
+                          transition: 'all 150ms ease',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: 'rgba(0,160,200,0.18)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 9, fontWeight: 700,
+                          }}
+                        >
+                          {personInitials(record.person_name)}
+                        </span>
+                        {formatShortName(record.person_name)} · {record.size}
+                        <span style={{ fontWeight: 800 }}>{added ? '✓' : '+'}</span>
+                      </button>
+                    );
+                  })}
+                  {hiddenCount > 0 && (
+                    <button
+                      onClick={() => setTagsExpanded((v) => !v)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center',
+                        padding: '4px 12px', borderRadius: 999,
+                        background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.2)',
+                        color: kmsColors.textMuted, fontSize: 12, fontWeight: 600,
+                        fontFamily: kmsFont, cursor: 'pointer',
+                      }}
+                    >
+                      {tagsExpanded ? 'Toon minder' : `+${hiddenCount} meer`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             <SizeSelector
               variants={product.variants}
               cart={cart}

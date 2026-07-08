@@ -123,6 +123,29 @@ export function colorNameToHex(colorName: string): string {
 }
 
 /**
+ * "Kees van der Meulen" → "Kees M." — voornaam + eerste letter laatste naamdeel + punt.
+ * Eén naamdeel blijft ongewijzigd.
+ */
+export function formatShortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return parts[0] ?? '';
+  const first = parts[0];
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${first} ${lastInitial}.`;
+}
+
+/**
+ * Avatar-initialen: eerste letter voornaam + eerste letter laatste naamdeel.
+ * Bij één naamdeel of lege naam: fallback naar die ene letter, of "?".
+ */
+export function personInitials(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+/**
  * Kleur voor een groep-badge/tab, op basis van het groep-ID.
  * - Bij ≤3 groepen tegelijk zichtbaar: cyclische brand-accentkleuren (orange/cyan/green).
  * - Bij meer groepen: hash-gebaseerde kleurgeneratie (zelfde aanpak als colorNameToHex()),

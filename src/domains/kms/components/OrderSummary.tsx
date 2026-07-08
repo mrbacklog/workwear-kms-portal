@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { kmsColors, kmsFont, kmsApiBase } from '../lib/kms-theme';
 import { kmsAuthFetch } from '../lib/kms-auth-fetch';
-import type { CartState, KmsPerson, KmsOrderResponse } from '../types';
+import type { CartState, KmsPerson, KmsOrderResponse, KmsPersonHistoryRecord } from '../types';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { useKmsPersons } from '../hooks/useKmsPersons';
 import { PersonTagPicker } from './PersonTagPicker';
@@ -13,6 +13,7 @@ interface OrderSummaryProps {
   onOrderPlaced: (order: KmsOrderResponse) => void;
   customerHasGrippId: boolean;
   onPersonsChange: (variantId: string, persons: KmsPerson[]) => void;
+  history: KmsPersonHistoryRecord[];
 }
 
 function formatPrice(cents: number): string {
@@ -48,6 +49,7 @@ export function OrderSummary({
   onOrderPlaced,
   customerHasGrippId,
   onPersonsChange,
+  history,
 }: OrderSummaryProps) {
   const { t } = useContext(BolusModeContext);
   const [reference, setReference] = useState('');
@@ -325,7 +327,8 @@ export function OrderSummary({
                   <PersonTagPicker
                     quantity={item.quantity}
                     selectedPersons={item.persons ?? []}
-                    availablePersons={availablePersons}
+                    persons={availablePersons}
+                    history={history}
                     onChange={(persons) => onPersonsChange(item.variantId, persons)}
                     onCreatePerson={createPerson}
                     onDeletePerson={deletePerson}

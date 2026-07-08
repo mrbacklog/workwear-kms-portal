@@ -46,7 +46,7 @@ export const translations = {
     'summary.close': 'Sluiten',
     'summary.size': 'Maat',
     'summary.total': 'Totaalbedrag',
-    'summary.pricing_note': 'Prijzen zijn exclusief eventuele bedrukkings- of borduurkosten.',
+    'summary.pricing_note': 'Alle genoemde prijzen zijn exclusief bedrukking.',
     'summary.reference_label': 'Referentie (optioneel)',
     'summary.reference_placeholder': 'Bijv. afdeling, projectnummer...',
     'summary.notes_label': 'Opmerkingen (optioneel)',
@@ -135,6 +135,18 @@ export const translations = {
     'access_request.close': 'Sluiten',
     'access_request.success': 'Uw aanvraag is ontvangen en wacht op goedkeuring.',
     'access_request.error': 'Er ging iets mis bij het versturen van uw aanvraag. Probeer het opnieuw.',
+
+    // Herhaalbestellen via persoonsfilter (medewerker-terminologie, code-namen blijven person.*)
+    'person.filter_button': 'Filter op medewerker',
+    'person.filter_title': 'Filter op medewerker',
+    'person.filter_clear': 'Filter wissen',
+    'person.search_placeholder': 'Zoek op naam...',
+    'person.none_found': 'Geen medewerker gevonden',
+    'person.ordered_before_count': 'eerder besteld',
+    'person.not_ordered_yet': 'nog niets besteld',
+    'person.history_section_title': 'Eerder besteld voor',
+    'person.more_tags': 'meer',
+    'person.less_tags': 'Toon minder',
   },
   'nl-ZB': {
     // Yerseks / Zuid-Bevelands dialect
@@ -179,7 +191,7 @@ export const translations = {
     'summary.close': "Dicht doen",
     'summary.size': "Miht",
     'summary.total': "Totihl",
-    'summary.pricing_note': "Priezen bin zonder eventueel bedrukking- of borduurkosten.",
+    'summary.pricing_note': "Alle enoemde priezen bin zonder bedrukking.",
     'summary.reference_label': "Referentie (of je wil)",
     'summary.reference_placeholder': "Bv. afdeling, projectnommer...",
     'summary.notes_label': "Opmerkingen (of je wil)",
@@ -268,6 +280,18 @@ export const translations = {
     'access_request.close': "Dicht doen",
     'access_request.success': "Je aanvraeg is d'r, wacht noh op oh-keuring.",
     'access_request.error': "'t Hink mis bie 't stieren. Prebeer 't noh 's.",
+
+    // Herhaalbestellen via persoonsfilter (medewerker-terminologie)
+    'person.filter_button': 'Voe wie?',
+    'person.filter_title': 'Voe wie?',
+    'person.filter_clear': "Filter d'r af",
+    'person.search_placeholder': 'Zoek op naeme...',
+    'person.none_found': 'Gin verkeschapper evonden',
+    'person.ordered_before_count': 'eerder ebesteld',
+    'person.not_ordered_yet': 'nog niks ebesteld',
+    'person.history_section_title': 'Eerder ebesteld voe',
+    'person.more_tags': 'mì',
+    'person.less_tags': 'Minder',
   },
 } as const;
 
