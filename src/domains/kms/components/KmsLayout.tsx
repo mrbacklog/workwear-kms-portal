@@ -5,6 +5,7 @@ import { BolusModeCountdown, BolusModeActiveBanner } from './BolusModus';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { CustomerSwitcher } from './CustomerSwitcher';
 import { FeedbackDrawer } from './FeedbackDrawer';
+import { AccessRequestDialog } from './AccessRequestDialog';
 import type { KmsStaffCustomer } from '../types';
 
 interface KmsLayoutProps {
@@ -18,6 +19,7 @@ interface KmsLayoutProps {
 
 export function KmsLayout({ children, customerName, isStaff, selectedCustomer, onCustomerSwitch, onLogout }: KmsLayoutProps) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [accessRequestOpen, setAccessRequestOpen] = useState(false);
   const { isActive, state, pressProgress, countdownNumber, flashActive, handlers, t, deactivate } =
     useBolusModus();
 
@@ -185,6 +187,27 @@ export function KmsLayout({ children, customerName, isStaff, selectedCustomer, o
                   {customerName}
                 </div>
               ) : null}
+              {!isStaff && (
+                <button
+                  onClick={() => setAccessRequestOpen(true)}
+                  style={{
+                    fontFamily: kmsFont,
+                    fontSize: 12,
+                    color: kmsColors.textMuted,
+                    background: 'none',
+                    border: `1px solid ${kmsColors.textMuted}`,
+                    borderRadius: 6,
+                    padding: '4px 10px',
+                    cursor: 'pointer',
+                    transition: 'color 150ms ease, border-color 150ms ease',
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = kmsColors.text; e.currentTarget.style.borderColor = kmsColors.text; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = kmsColors.textMuted; e.currentTarget.style.borderColor = kmsColors.textMuted; }}
+                >
+                  {t('layout.request_access')}
+                </button>
+              )}
               {onLogout && (
                 <button
                   onClick={onLogout}
@@ -245,6 +268,10 @@ export function KmsLayout({ children, customerName, isStaff, selectedCustomer, o
       </div>
       {/* Feedback drawer — alleen voor staff */}
       {isStaff && <FeedbackDrawer />}
+
+      {accessRequestOpen && (
+        <AccessRequestDialog t={t} onClose={() => setAccessRequestOpen(false)} />
+      )}
     </BolusModeContext.Provider>
   );
 }

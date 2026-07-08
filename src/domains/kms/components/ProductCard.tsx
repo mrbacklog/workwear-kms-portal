@@ -1,6 +1,6 @@
 
 import type { KmsPortalProduct, CartState } from '../types';
-import { kmsColors, kmsFont, colorNameToHex } from '../lib/kms-theme';
+import { kmsColors, kmsFont, colorNameToHex, groupIdToColor } from '../lib/kms-theme';
 import { SizeSelector } from './SizeSelector';
 import { ColorSwatch } from './ColorSwatch';
 
@@ -12,6 +12,8 @@ interface ProductCardProps {
   cart: CartState;
   onQuantityChange: (variantId: string, quantity: number) => void;
   index?: number;
+  /** Alle groep-ID's die momenteel zichtbaar zijn (voor consistente badge-kleuren). */
+  allGroupIds?: string[];
 }
 
 function formatPrice(cents: number): string {
@@ -29,6 +31,7 @@ export function ProductCard({
   cart,
   onQuantityChange,
   index,
+  allGroupIds = [],
 }: ProductCardProps) {
   const selectedQuantity = product.variants.reduce((sum, variant) => {
     return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
@@ -165,6 +168,29 @@ export function ProductCard({
                 }}
               >
                 {formatPrice(product.price_from_cents)}
+              </div>
+            )}
+            {product.groups && product.groups.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                {product.groups.map((group) => {
+                  const color = groupIdToColor(group.id, allGroupIds);
+                  return (
+                    <span
+                      key={group.id}
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        background: `${color}22`,
+                        color,
+                        fontFamily: kmsFont,
+                      }}
+                    >
+                      {group.name}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>

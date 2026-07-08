@@ -35,6 +35,13 @@ export interface KmsImage {
   is_cover: boolean;
 }
 
+/** Bestellijst-indeling (groep) waaraan een product is toegewezen. */
+export interface KmsPortalProductGroup {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
 export interface KmsPortalProduct {
   model_name: string;
   brand_name: string;
@@ -49,6 +56,8 @@ export interface KmsPortalProduct {
   source?: 'clothing' | 'gripp';
   /** Set when source === 'gripp'. UUID of the gripp_product row. */
   gripp_product_id?: string | null;
+  /** Indelingen waarin dit product voorkomt (leeg = ongegroepeerd). */
+  groups?: KmsPortalProductGroup[];
 }
 
 export interface KmsPortalProductList {
@@ -67,6 +76,14 @@ export interface CartItem {
   priceCents: number;
   /** Set for Gripp items (no variant/size/EAN). */
   grippProductId?: string;
+  /** Personen getagd aan deze regel (client-side selectie vóór het plaatsen van de order). */
+  persons?: KmsPerson[];
+}
+
+export interface KmsPerson {
+  id: string;
+  name: string;
+  created_at?: string;
 }
 
 export interface CartState {
@@ -81,6 +98,8 @@ export interface KmsOrderLine {
   /** Set for Gripp-catalogue items (no EAN/variant). */
   gripp_product_id?: string;
   quantity: number;
+  /** Optionele lijst van reeds aangemaakte person-ID's getagd aan deze regel. */
+  person_ids?: string[];
 }
 
 export interface KmsOrderRequest {
@@ -94,7 +113,6 @@ export interface KmsOrderResponse {
   order_number: string;
   reference: string | null;
   notes: string | null;
-  total_cents: number;
   total_amount_cents: number;
   gripp_offer_number: string | null;
   gripp_status: 'created' | 'failed' | 'skipped' | null;

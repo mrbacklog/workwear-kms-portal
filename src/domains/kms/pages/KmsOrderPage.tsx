@@ -9,7 +9,7 @@ import { GrippProductCard } from '../components/GrippProductCard';
 import { CartBar } from '../components/CartBar';
 import { ProductDetail } from '../components/ProductDetail';
 import { OrderSummary } from '../components/OrderSummary';
-import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal, kmsApiBase } from '../lib/kms-theme';
+import { kmsColors, kmsFont, KMS_DEFAULT_SLUG, isKmsPortal, kmsApiBase, groupIdToColor } from '../lib/kms-theme';
 import { kmsAuthFetch } from '../lib/kms-auth-fetch';
 import { BolusModeContext } from '../lib/kms-bolus-context';
 import { usePwaInstall } from '../hooks/usePwaInstall';
@@ -97,11 +97,12 @@ export default function KmsOrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeGroupTab, setActiveGroupTab] = useState<string>('all');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { cart, setQuantity, setGrippQuantity, clearCart } = useCart();
+  const { cart, setQuantity, setGrippQuantity, setPersonsForItem, clearCart } = useCart();
   const [showSummary, setShowSummary] = useState(false);
 
   async function fetchProducts() {
@@ -134,14 +135,34 @@ export default function KmsOrderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, isAuthenticated]);
 
+  // Canonieke groepenlijst afgeleid uit de unie van product.groups (geen apart
+  // endpoint nodig — de portal-API stuurt de groepen al mee per product),
+  // gededupliceerd op id en gesorteerd op sort_order.
+  const availableGroups = useMemo(() => {
+    const byId = new Map<string, { id: string; name: string; sort_order: number }>();
+    for (const product of products) {
+      for (const group of product.groups ?? []) {
+        if (!byId.has(group.id)) byId.set(group.id, group);
+      }
+    }
+    return Array.from(byId.values()).sort((a, b) => a.sort_order - b.sort_order);
+  }, [products]);
+
+  const allGroupIds = useMemo(() => availableGroups.map((g) => g.id), [availableGroups]);
+
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
+    const byGroup =
+      activeGroupTab === 'all'
+        ? products
+        : products.filter((p) => (p.groups ?? []).some((g) => g.id === activeGroupTab));
+
+    if (!searchQuery.trim()) return byGroup;
     const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return products.filter((p) => {
+    return byGroup.filter((p) => {
       const text = `${p.brand_name} ${p.model_name} ${p.color}`.toLowerCase();
       return words.every((word) => text.includes(word));
     });
-  }, [products, searchQuery]);
+  }, [products, searchQuery, activeGroupTab]);
 
   function handleToggle(index: number) {
     setExpandedIndex((prev) => (prev === index ? null : index));
@@ -285,6 +306,50 @@ export default function KmsOrderPage() {
             )}
           </div>
         </div>
+
+        {/* Indeling-tabs — alleen tonen als er tenminste 1 indeling bestaat */}
+        {availableGroups.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              overflowX: 'auto',
+              whiteSpace: 'nowrap',
+              paddingBottom: 12,
+              marginBottom: 4,
+              scrollbarWidth: 'none',
+            }}
+          >
+            {[{ id: 'all', name: t('catalog.all_tab') }, ...availableGroups].map((group) => {
+              const isActive = activeGroupTab === group.id;
+              const activeColor = group.id === 'all' ? kmsColors.orange : groupIdToColor(group.id, allGroupIds);
+              return (
+                <button
+                  key={group.id}
+                  onClick={() => {
+                    setActiveGroupTab(group.id);
+                    setExpandedIndex(null);
+                  }}
+                  style={{
+                    flexShrink: 0,
+                    padding: '8px 16px',
+                    borderRadius: 999,
+                    border: `1.5px solid ${isActive ? activeColor : kmsColors.border}`,
+                    background: isActive ? `${activeColor}22` : kmsColors.surface,
+                    color: isActive ? activeColor : kmsColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: isActive ? 700 : 500,
+                    fontFamily: kmsFont,
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease',
+                  }}
+                >
+                  {group.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Subtiele PWA install hint */}
         {canInstall && (
@@ -520,6 +585,7 @@ export default function KmsOrderPage() {
                     product={product}
                     index={index}
                     cart={cart}
+                    allGroupIds={allGroupIds}
                     onQuantityChange={(grippProductId, quantity) => {
                       setGrippQuantity(grippProductId, quantity, {
                         modelName: product.model_name,
@@ -539,6 +605,7 @@ export default function KmsOrderPage() {
                   onToggle={() => handleToggle(index)}
                   onDetailClick={() => handleOpenDetail(product)}
                   cart={cart}
+                  allGroupIds={allGroupIds}
                   onQuantityChange={(variantId, quantity) => {
                     const variant = product.variants.find(v => v.id === variantId);
                     setQuantity(variantId, quantity, variant ? {
@@ -573,6 +640,7 @@ export default function KmsOrderPage() {
         onClose={() => setShowSummary(false)}
         onOrderPlaced={handleOrderPlaced}
         customerHasGrippId={customerHasGrippId}
+        onPersonsChange={setPersonsForItem}
       />
     </>
   );

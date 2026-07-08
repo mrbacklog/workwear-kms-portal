@@ -122,6 +122,26 @@ export function colorNameToHex(colorName: string): string {
   return `hsl(${h}, 40%, 40%)`;
 }
 
+/**
+ * Kleur voor een groep-badge/tab, op basis van het groep-ID.
+ * - Bij ≤3 groepen tegelijk zichtbaar: cyclische brand-accentkleuren (orange/cyan/green).
+ * - Bij meer groepen: hash-gebaseerde kleurgeneratie (zelfde aanpak als colorNameToHex()),
+ *   zodat een groep altijd dezelfde kleur krijgt, ook na een her-render.
+ */
+export function groupIdToColor(groupId: string, allGroupIds: string[]): string {
+  const cyclic = [kmsColors.orange, kmsColors.cyan, kmsColors.green];
+  if (allGroupIds.length <= 3) {
+    const index = allGroupIds.indexOf(groupId);
+    return cyclic[index >= 0 ? index % cyclic.length : 0];
+  }
+  let hash = 0;
+  for (let i = 0; i < groupId.length; i++) {
+    hash = (groupId.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 55%, 45%)`;
+}
+
 /** Default slug when running on a portal host (no slug in URL) */
 export const KMS_DEFAULT_SLUG = 'vankruiningen';
 

@@ -46,6 +46,7 @@ export const translations = {
     'summary.close': 'Sluiten',
     'summary.size': 'Maat',
     'summary.total': 'Totaalbedrag',
+    'summary.pricing_note': 'Prijzen zijn exclusief eventuele bedrukkings- of borduurkosten.',
     'summary.reference_label': 'Referentie (optioneel)',
     'summary.reference_placeholder': 'Bijv. afdeling, projectnummer...',
     'summary.notes_label': 'Opmerkingen (optioneel)',
@@ -78,6 +79,9 @@ export const translations = {
     'order.no_products_assigned': 'Er zijn nog geen producten toegewezen aan uw assortiment.',
     'order.clear_filter': 'Zoekfilter verwijderen',
     'order.clear_search': 'Zoekopdracht wissen',
+
+    // Catalogus indeling-tabs
+    'catalog.all_tab': 'Alles',
 
     // Confirm page
     'confirm.order_number': 'Ordernummer',
@@ -119,6 +123,18 @@ export const translations = {
     // SizeSelector aria labels
     'size.decrease': 'Verminder',
     'size.increase': 'Verhoog',
+
+    // Access request (extra account aanvragen)
+    'layout.request_access': 'Extra account aanvragen',
+    'access_request.title': 'Extra account aanvragen',
+    'access_request.email_label': 'E-mailadres',
+    'access_request.email_placeholder': 'naam@bedrijf.nl',
+    'access_request.submit': 'Versturen',
+    'access_request.submitting': 'Versturen...',
+    'access_request.cancel': 'Annuleren',
+    'access_request.close': 'Sluiten',
+    'access_request.success': 'Uw aanvraag is ontvangen en wacht op goedkeuring.',
+    'access_request.error': 'Er ging iets mis bij het versturen van uw aanvraag. Probeer het opnieuw.',
   },
   'nl-ZB': {
     // Yerseks / Zuid-Bevelands dialect
@@ -163,6 +179,7 @@ export const translations = {
     'summary.close': "Dicht doen",
     'summary.size': "Miht",
     'summary.total': "Totihl",
+    'summary.pricing_note': "Priezen bin zonder eventueel bedrukking- of borduurkosten.",
     'summary.reference_label': "Referentie (of je wil)",
     'summary.reference_placeholder': "Bv. afdeling, projectnommer...",
     'summary.notes_label': "Opmerkingen (of je wil)",
@@ -195,6 +212,9 @@ export const translations = {
     'order.no_products_assigned': "D'r bin noh hin spullen voe joe.",
     'order.clear_filter': "Filter weg",
     'order.clear_search': "Zoekopdracht wissen",
+
+    // Catalogus indeling-tabs
+    'catalog.all_tab': "Alles",
 
     // Confirm page
     'confirm.order_number': "Ordernommer",
@@ -236,6 +256,18 @@ export const translations = {
     // SizeSelector aria labels
     'size.decrease': "Minder",
     'size.increase': "Meer",
+
+    // Access request (extra account aanvragen)
+    'layout.request_access': "Extra account eanvraege",
+    'access_request.title': "Extra account eanvraege",
+    'access_request.email_label': "E-mail",
+    'access_request.email_placeholder': "niem@bedriefke.nl",
+    'access_request.submit': "Stier op",
+    'access_request.submitting': "Stieren...",
+    'access_request.cancel': "Lî mî zitte",
+    'access_request.close': "Dicht doen",
+    'access_request.success': "Je aanvraeg is d'r, wacht noh op oh-keuring.",
+    'access_request.error': "'t Hink mis bie 't stieren. Prebeer 't noh 's.",
   },
 } as const;
 

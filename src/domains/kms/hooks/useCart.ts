@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { CartItem, CartState } from '../types';
+import type { CartItem, CartState, KmsPerson } from '../types';
 
 function computeTotals(items: CartItem[]): { totalItems: number; totalCents: number } {
   return {
@@ -29,6 +29,7 @@ interface UseCartReturn {
   removeItem: (variantId: string) => void;
   setQuantity: (variantId: string, quantity: number, meta?: Omit<AddItemParams, 'variantId'>) => void;
   setGrippQuantity: (grippProductId: string, quantity: number, meta?: Omit<AddGrippItemParams, 'grippProductId'>) => void;
+  setPersonsForItem: (variantId: string, persons: KmsPerson[]) => void;
   clearCart: () => void;
   getQuantityForVariant: (variantId: string) => number;
   getQuantityForGripp: (grippProductId: string) => number;
@@ -94,6 +95,14 @@ export function useCart(): UseCartReturn {
     });
   }, []);
 
+  const setPersonsForItem = useCallback((variantId: string, persons: KmsPerson[]) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.variantId === variantId ? { ...item, persons } : item,
+      ),
+    );
+  }, []);
+
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
@@ -150,5 +159,5 @@ export function useCart(): UseCartReturn {
     totalCents: totals.totalCents,
   };
 
-  return { cart, addItem, removeItem, setQuantity, setGrippQuantity, clearCart, getQuantityForVariant, getQuantityForGripp };
+  return { cart, addItem, removeItem, setQuantity, setGrippQuantity, setPersonsForItem, clearCart, getQuantityForVariant, getQuantityForGripp };
 }

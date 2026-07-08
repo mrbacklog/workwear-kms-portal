@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { kmsColors, kmsFont, kmsApiBase } from '../lib/kms-theme';
 import { kmsAuthFetch } from '../lib/kms-auth-fetch';
-import type { CartState, KmsOrderResponse } from '../types';
+import type { CartState, KmsPerson, KmsOrderResponse } from '../types';
 import { BolusModeContext } from '../lib/kms-bolus-context';
+import { useKmsPersons } from '../hooks/useKmsPersons';
+import { PersonTagPicker } from './PersonTagPicker';
 
 interface OrderSummaryProps {
   cart: CartState;
@@ -10,6 +12,7 @@ interface OrderSummaryProps {
   onClose: () => void;
   onOrderPlaced: (order: KmsOrderResponse) => void;
   customerHasGrippId: boolean;
+  onPersonsChange: (variantId: string, persons: KmsPerson[]) => void;
 }
 
 function formatPrice(cents: number): string {
@@ -44,12 +47,14 @@ export function OrderSummary({
   onClose,
   onOrderPlaced,
   customerHasGrippId,
+  onPersonsChange,
 }: OrderSummaryProps) {
   const { t } = useContext(BolusModeContext);
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { persons: availablePersons, createPerson, deletePerson } = useKmsPersons();
 
   // Reset fields when panel reopens
   useEffect(() => {
@@ -80,10 +85,19 @@ export function OrderSummary({
     try {
       const body = {
         lines: cart.items.map((item) => {
+          const personIds = item.persons?.length ? item.persons.map((p) => p.id) : undefined;
           if (item.grippProductId) {
-            return { gripp_product_id: item.grippProductId, quantity: item.quantity };
+            return {
+              gripp_product_id: item.grippProductId,
+              quantity: item.quantity,
+              ...(personIds ? { person_ids: personIds } : {}),
+            };
           }
-          return { product_variant_id: item.variantId, quantity: item.quantity };
+          return {
+            product_variant_id: item.variantId,
+            quantity: item.quantity,
+            ...(personIds ? { person_ids: personIds } : {}),
+          };
         }),
         reference: reference.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -308,6 +322,14 @@ export function OrderSummary({
                       </>
                     )}
                   </div>
+                  <PersonTagPicker
+                    quantity={item.quantity}
+                    selectedPersons={item.persons ?? []}
+                    availablePersons={availablePersons}
+                    onChange={(persons) => onPersonsChange(item.variantId, persons)}
+                    onCreatePerson={createPerson}
+                    onDeletePerson={deletePerson}
+                  />
                 </div>
                 <div
                   style={{
@@ -336,7 +358,7 @@ export function OrderSummary({
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 24,
+              marginBottom: 8,
             }}
           >
             <span
@@ -359,6 +381,18 @@ export function OrderSummary({
             >
               {formatPrice(cart.totalCents)}
             </span>
+          </div>
+
+          {/* Pricing note (subtiel, informatief) */}
+          <div
+            style={{
+              fontSize: 11,
+              color: kmsColors.textMuted,
+              fontFamily: kmsFont,
+              marginBottom: 24,
+            }}
+          >
+            {t('summary.pricing_note')}
           </div>
 
           {/* Reference field */}

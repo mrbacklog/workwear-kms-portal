@@ -255,7 +255,7 @@ export default function KmsConfirmPage() {
           </p>
 
           {/* Order total (if available) */}
-          {order?.total_cents !== undefined && (
+          {order?.total_amount_cents !== undefined && (
             <div
               style={{
                 background: kmsColors.surface,

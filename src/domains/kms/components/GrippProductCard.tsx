@@ -1,11 +1,13 @@
 import type { KmsPortalProduct, CartState } from '../types';
-import { kmsColors, kmsFont } from '../lib/kms-theme';
+import { kmsColors, kmsFont, groupIdToColor } from '../lib/kms-theme';
 
 interface GrippProductCardProps {
   product: KmsPortalProduct;
   cart: CartState;
   onQuantityChange: (grippProductId: string, quantity: number) => void;
   index?: number;
+  /** Alle groep-ID's die momenteel zichtbaar zijn (voor consistente badge-kleuren). */
+  allGroupIds?: string[];
 }
 
 function formatPrice(cents: number): string {
@@ -24,6 +26,7 @@ export function GrippProductCard({
   cart,
   onQuantityChange,
   index = 0,
+  allGroupIds = [],
 }: GrippProductCardProps) {
   const grippProductId = product.gripp_product_id ?? '';
   const quantity =
@@ -150,6 +153,29 @@ export function GrippProductCard({
                 }}
               >
                 {formatPrice(priceCents)}
+              </div>
+            )}
+            {product.groups && product.groups.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                {product.groups.map((group) => {
+                  const color = groupIdToColor(group.id, allGroupIds);
+                  return (
+                    <span
+                      key={group.id}
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        background: `${color}22`,
+                        color,
+                        fontFamily: kmsFont,
+                      }}
+                    >
+                      {group.name}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>
