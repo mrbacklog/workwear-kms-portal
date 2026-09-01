@@ -102,7 +102,7 @@ export default function KmsOrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGroupTab, setActiveGroupTab] = useState<string>('all');
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [detailProduct, setDetailProduct] = useState<KmsPortalProduct | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [personFilter, setPersonFilter] = useState<string | null>(null);
@@ -193,8 +193,44 @@ export default function KmsOrderPage() {
     });
   }, [products, searchQuery, activeGroupTab, personFilter, historyByEan]);
 
-  function handleToggle(index: number) {
-    setExpandedIndex((prev) => (prev === index ? null : index));
+  /**
+   * Bundelt de (per model+kleur aangeleverde) portal-producten tot één kaart per
+   * model. Groeperen gebeurt op product_model_id — NOOIT op de modelnaam-tekst:
+   * dezelfde merk+modelnaam kan naar verschillende modellen wijzen (met eigen
+   * EAN's), en de modelnaam-opmaak is aan verandering onderhevig.
+   *
+   * Losse kaart blijft losse kaart bij: Gripp-regels (geen model), producten
+   * zonder product_model_id, en modellen met maar één kleur.
+   */
+  const productGroups = useMemo(() => {
+    const groups: { key: string; products: KmsPortalProduct[] }[] = [];
+    const byModel = new Map<string, { key: string; products: KmsPortalProduct[] }>();
+
+    filteredProducts.forEach((product, index) => {
+      const modelId = product.source !== 'gripp' ? product.product_model_id : null;
+      if (!modelId) {
+        // Geen model om op te bundelen — eigen kaart, sleutel op eigen identiteit.
+        const ownKey = product.gripp_product_id
+          ? `gripp:${product.gripp_product_id}`
+          : `los:${product.color_variant_id ?? `${product.brand_name}|${product.model_name}|${product.color}|${index}`}`;
+        groups.push({ key: ownKey, products: [product] });
+        return;
+      }
+      const existing = byModel.get(modelId);
+      if (existing) {
+        existing.products.push(product);
+        return;
+      }
+      const entry = { key: `model:${modelId}`, products: [product] };
+      byModel.set(modelId, entry);
+      groups.push(entry);
+    });
+
+    return groups;
+  }, [filteredProducts]);
+
+  function handleToggle(key: string) {
+    setExpandedKey((prev) => (prev === key ? null : key));
   }
 
   function handleOpenDetail(product: KmsPortalProduct) {
@@ -280,7 +316,7 @@ export default function KmsOrderPage() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setExpandedIndex(null);
+                setExpandedKey(null);
               }}
               style={{
                 width: '100%',
@@ -394,7 +430,7 @@ export default function KmsOrderPage() {
                   key={group.id}
                   onClick={() => {
                     setActiveGroupTab(group.id);
-                    setExpandedIndex(null);
+                    setExpandedKey(null);
                   }}
                   style={{
                     flexShrink: 0,
@@ -647,14 +683,13 @@ export default function KmsOrderPage() {
               paddingBottom: 140,
             }}
           >
-            {filteredProducts.map((product, index) => {
-              // Use a stable key combining brand+model+color
-              const key = `${product.brand_name}-${product.model_name}-${product.color}-${index}`;
+            {productGroups.map((group, index) => {
+              const product = group.products[0];
 
               if (product.source === 'gripp' && product.gripp_product_id) {
                 return (
                   <GrippProductCard
-                    key={key}
+                    key={group.key}
                     product={product}
                     index={index}
                     cart={cart}
@@ -669,37 +704,50 @@ export default function KmsOrderPage() {
                 );
               }
 
+              // Zoek de variant op over ALLE kleuren van dit model, zodat de
+              // winkelwagenregel de kleur krijgt waar de variant echt bij hoort.
+              function findVariant(variantId: string) {
+                for (const color of group.products) {
+                  const variant = color.variants.find((v) => v.id === variantId);
+                  if (variant) return { variant, color };
+                }
+                return null;
+              }
+
               return (
                 <ProductCard
-                  key={key}
+                  key={group.key}
                   product={product}
+                  colors={group.products}
                   index={index}
-                  isExpanded={expandedIndex === index}
-                  onToggle={() => handleToggle(index)}
-                  onDetailClick={() => handleOpenDetail(product)}
+                  isExpanded={expandedKey === group.key}
+                  onToggle={() => handleToggle(group.key)}
+                  onDetailClick={(shownColor) => handleOpenDetail(shownColor)}
                   cart={cart}
                   allGroupIds={allGroupIds}
-                  history={product.variants.flatMap((v) => historyByEan.get(v.ean) ?? [])}
+                  history={group.products.flatMap((c) =>
+                    c.variants.flatMap((v) => historyByEan.get(v.ean) ?? []),
+                  )}
                   personFilter={personFilter}
                   onQuantityChange={(variantId, quantity) => {
-                    const variant = product.variants.find(v => v.id === variantId);
-                    setQuantity(variantId, quantity, variant ? {
-                      modelName: `${product.brand_name} ${product.model_name}`,
-                      color: product.color,
-                      size: variant.size,
-                      ean: variant.ean ?? '',
-                      priceCents: variant.price_cents ?? 0,
+                    const found = findVariant(variantId);
+                    setQuantity(variantId, quantity, found ? {
+                      modelName: `${found.color.brand_name} ${found.color.model_name}`,
+                      color: found.color.color,
+                      size: found.variant.size,
+                      ean: found.variant.ean ?? '',
+                      priceCents: found.variant.price_cents ?? 0,
                     } : undefined);
                   }}
                   onRepeatHistoryTag={(variantId, qty, person: KmsPerson) => {
-                    const variant = product.variants.find((v) => v.id === variantId);
-                    if (!variant) return;
+                    const found = findVariant(variantId);
+                    if (!found) return;
                     addPersonToLine(variantId, qty, person, {
-                      modelName: `${product.brand_name} ${product.model_name}`,
-                      color: product.color,
-                      size: variant.size,
-                      ean: variant.ean ?? '',
-                      priceCents: variant.price_cents ?? 0,
+                      modelName: `${found.color.brand_name} ${found.color.model_name}`,
+                      color: found.color.color,
+                      size: found.variant.size,
+                      ean: found.variant.ean ?? '',
+                      priceCents: found.variant.price_cents ?? 0,
                     });
                   }}
                 />
@@ -740,7 +788,7 @@ export default function KmsOrderPage() {
         selectedPersonId={personFilter}
         onSelectFilter={(id) => {
           setPersonFilter(id);
-          setExpandedIndex(null);
+          setExpandedKey(null);
         }}
       />
     </>

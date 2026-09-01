@@ -119,6 +119,8 @@ export const translations = {
 
     // ProductCard
     'product.price_from': 'vanaf',
+    'product.colors': 'kleuren',
+    'product.choose_color': 'Kies een kleur',
 
     // SizeSelector aria labels
     'size.decrease': 'Verminder',
@@ -264,6 +266,8 @@ export const translations = {
 
     // ProductCard
     'product.price_from': "vanof",
+    'product.colors': "kleuren",
+    'product.choose_color': "Kies 'n kleur",
 
     // SizeSelector aria labels
     'size.decrease': "Minder",

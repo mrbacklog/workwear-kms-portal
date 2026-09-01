@@ -1,15 +1,22 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import type { KmsPortalProduct, CartState, KmsPersonHistoryRecord, KmsPerson } from '../types';
 import { kmsColors, kmsFont, colorNameToHex, groupIdToColor, formatShortName, personInitials } from '../lib/kms-theme';
+import { BolusModeContext } from '../lib/kms-bolus-context';
 import { SizeSelector } from './SizeSelector';
 import { ColorSwatch } from './ColorSwatch';
 
 interface ProductCardProps {
+  /** Representatieve kleur van het model (eerste kleur in de lijst). */
   product: KmsPortalProduct;
+  /**
+   * Alle kleuren van hetzelfde model die na filteren zichtbaar zijn.
+   * Eén kleur = de kaart gedraagt zich als voorheen (geen kleurkiezer).
+   */
+  colors?: KmsPortalProduct[];
   isExpanded: boolean;
   onToggle: () => void;
-  onDetailClick: () => void;
+  onDetailClick: (product: KmsPortalProduct) => void;
   cart: CartState;
   onQuantityChange: (variantId: string, quantity: number) => void;
   index?: number;
@@ -25,6 +32,14 @@ interface ProductCardProps {
 
 const TAG_LIMIT = 4;
 
+/**
+ * Stabiele sleutel per kleur binnen een model. color_variant_id is de
+ * betrouwbare bron; alleen als die ontbreekt vallen we terug op de kleurnaam.
+ */
+function colorKey(product: KmsPortalProduct): string {
+  return product.color_variant_id ?? `naam:${product.color}`;
+}
+
 function formatPrice(cents: number): string {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(
     cents / 100,
@@ -34,6 +49,7 @@ function formatPrice(cents: number): string {
 
 export function ProductCard({
   product,
+  colors,
   isExpanded,
   onToggle,
   onDetailClick,
@@ -45,9 +61,20 @@ export function ProductCard({
   personFilter = null,
   onRepeatHistoryTag,
 }: ProductCardProps) {
+  const { t } = useContext(BolusModeContext);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [addedKey, setAddedKey] = useState<string | null>(null);
   const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const colorOptions = colors && colors.length > 0 ? colors : [product];
+  const isMultiColor = colorOptions.length > 1;
+  const [activeColorKey, setActiveColorKey] = useState<string>(() => colorKey(colorOptions[0]));
+  // Valt de gekozen kleur weg uit de zichtbare set (zoek-/groepsfilter), dan
+  // toont de kaart de eerste kleur die er nog wél is. Bewust tijdens render
+  // afgeleid en niet in state gecorrigeerd: komt de kleur terug, dan staat hij
+  // weer geselecteerd.
+  const activeColor =
+    colorOptions.find((c) => colorKey(c) === activeColorKey) ?? colorOptions[0];
 
   useEffect(() => {
     return () => {
@@ -55,17 +82,38 @@ export function ProductCard({
     };
   }, []);
 
-  const selectedQuantity = product.variants.reduce((sum, variant) => {
-    return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
-  }, 0);
+  function quantityForColor(color: KmsPortalProduct): number {
+    return color.variants.reduce((sum, variant) => {
+      return sum + (cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0);
+    }, 0);
+  }
+
+  // Telt over ALLE kleuren van het model — de badge hoort de hele kaart te dekken,
+  // niet alleen de kleur die toevallig openstaat.
+  const selectedQuantity = colorOptions.reduce((sum, c) => sum + quantityForColor(c), 0);
 
   const hasSelection = selectedQuantity > 0;
   // colorHex als fallback voor de thumbnail placeholder
-  const colorHex = product.color_primary_hex ?? colorNameToHex(product.color);
+  const colorHex = activeColor.color_primary_hex ?? colorNameToHex(activeColor.color);
+
+  const priceFromCents = colorOptions.reduce<number | null>((min, c) => {
+    if (c.price_from_cents == null) return min;
+    return min == null || c.price_from_cents < min ? c.price_from_cents : min;
+  }, null);
+
+  // Unie van de indelingen over alle kleuren, gededupliceerd op id.
+  const cardGroups = Array.from(
+    new Map(colorOptions.flatMap((c) => c.groups ?? []).map((g) => [g.id, g])).values(),
+  ).sort((a, b) => a.sort_order - b.sort_order);
+
+  // Historie is per model aangeleverd; toon in de kaartbody alleen wat bij de
+  // geopende kleur hoort.
+  const activeEans = new Set(activeColor.variants.map((v) => v.ean));
+  const colorHistory = history.filter((h) => activeEans.has(h.ean));
 
   const visibleHistory = personFilter
-    ? history.filter((h) => h.person_id === personFilter)
-    : history;
+    ? colorHistory.filter((h) => h.person_id === personFilter)
+    : colorHistory;
   const sortedHistory = [...visibleHistory].sort((a, b) =>
     b.last_ordered_at.localeCompare(a.last_ordered_at),
   );
@@ -73,13 +121,13 @@ export function ProductCard({
   const hiddenCount = sortedHistory.length - TAG_LIMIT;
 
   const filterHint = personFilter
-    ? [...history]
+    ? [...colorHistory]
         .filter((h) => h.person_id === personFilter)
         .sort((a, b) => b.last_ordered_at.localeCompare(a.last_ordered_at))[0]
     : null;
 
   function handleTagTap(record: KmsPersonHistoryRecord) {
-    const variant = product.variants.find((v) => v.ean === record.ean);
+    const variant = activeColor.variants.find((v) => v.ean === record.ean);
     if (!variant || !onRepeatHistoryTag) return;
     const key = `${record.ean}-${record.size}-${record.person_id}`;
     onRepeatHistoryTag(variant.id, record.qty, { id: record.person_id, name: record.person_name });
@@ -135,11 +183,11 @@ export function ProductCard({
           }}
         >
           {/* Thumbnail */}
-          {product.image ? (
+          {activeColor.image ? (
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <img
-                src={product.image.url}
-                alt={product.model_name}
+                src={activeColor.image.url}
+                alt={`${product.model_name} ${activeColor.color}`}
                 style={{
                   width: 64,
                   height: 64,
@@ -196,15 +244,34 @@ export function ProductCard({
                 gap: 6,
               }}
             >
-              <ColorSwatch
-                hexCode={product.color_primary_hex}
-                secondaryHex={product.color_secondary_hex}
-                tertiaryHex={product.color_tertiary_hex}
-                size={10}
-              />
-              {product.color}
+              {isMultiColor ? (
+                <>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    {colorOptions.slice(0, 4).map((c) => (
+                      <ColorSwatch
+                        key={colorKey(c)}
+                        hexCode={c.color_primary_hex}
+                        secondaryHex={c.color_secondary_hex}
+                        tertiaryHex={c.color_tertiary_hex}
+                        size={10}
+                      />
+                    ))}
+                  </span>
+                  {colorOptions.length} {t('product.colors')}
+                </>
+              ) : (
+                <>
+                  <ColorSwatch
+                    hexCode={activeColor.color_primary_hex}
+                    secondaryHex={activeColor.color_secondary_hex}
+                    tertiaryHex={activeColor.color_tertiary_hex}
+                    size={10}
+                  />
+                  {activeColor.color}
+                </>
+              )}
             </div>
-            {product.price_from_cents != null && (
+            {priceFromCents != null && (
               <div
                 style={{
                   fontSize: 13,
@@ -214,12 +281,12 @@ export function ProductCard({
                   fontFamily: kmsFont,
                 }}
               >
-                {formatPrice(product.price_from_cents)}
+                {formatPrice(priceFromCents)}
               </div>
             )}
-            {product.groups && product.groups.length > 0 && (
+            {cardGroups.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-                {product.groups.map((group) => {
+                {cardGroups.map((group) => {
                   const color = groupIdToColor(group.id, allGroupIds);
                   return (
                     <span
@@ -298,7 +365,9 @@ export function ProductCard({
         {/* Expanded body */}
         <div
           style={{
-            maxHeight: isExpanded ? (tagsExpanded ? 900 : 620) : 0,
+            maxHeight: isExpanded
+              ? (tagsExpanded ? 900 : 620) + (isMultiColor ? 72 : 0)
+              : 0,
             overflow: 'hidden',
             transition: 'max-height 300ms ease-out',
           }}
@@ -309,6 +378,62 @@ export function ProductCard({
               borderTop: `1px solid ${kmsColors.border}`,
             }}
           >
+            {isMultiColor && (
+              <div style={{ marginTop: 12 }}>
+                <div
+                  style={{
+                    fontSize: 10, fontWeight: 600, color: kmsColors.textMuted,
+                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                    marginBottom: 6, fontFamily: kmsFont,
+                  }}
+                >
+                  {t('product.choose_color')}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {colorOptions.map((c) => {
+                    const key = colorKey(c);
+                    const isActive = key === colorKey(activeColor);
+                    const qty = quantityForColor(c);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setActiveColorKey(key)}
+                        aria-pressed={isActive}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '5px 10px', borderRadius: 999,
+                          fontSize: 12, fontWeight: 600, fontFamily: kmsFont, cursor: 'pointer',
+                          border: `1.5px solid ${isActive ? kmsColors.borderSelected : kmsColors.border}`,
+                          background: isActive ? 'rgba(241,142,0,0.12)' : 'transparent',
+                          color: isActive ? kmsColors.text : kmsColors.textSecondary,
+                          transition: 'all 150ms ease',
+                        }}
+                      >
+                        <ColorSwatch
+                          hexCode={c.color_primary_hex}
+                          secondaryHex={c.color_secondary_hex}
+                          tertiaryHex={c.color_tertiary_hex}
+                          size={12}
+                        />
+                        {c.color}
+                        {qty > 0 && (
+                          <span
+                            style={{
+                              background: kmsColors.orange,
+                              color: kmsColors.white,
+                              fontSize: 10, fontWeight: 700,
+                              padding: '1px 6px', borderRadius: 999,
+                            }}
+                          >
+                            {qty}x
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {shownHistory.length > 0 && (
               <div style={{ marginTop: 12, marginBottom: 4 }}>
                 <div
@@ -371,10 +496,10 @@ export function ProductCard({
               </div>
             )}
             <SizeSelector
-              variants={product.variants}
+              variants={activeColor.variants}
               cart={cart}
               onQuantityChange={onQuantityChange}
-              onDetailClick={onDetailClick}
+              onDetailClick={() => onDetailClick(activeColor)}
             />
           </div>
         </div>

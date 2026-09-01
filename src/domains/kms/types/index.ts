@@ -43,6 +43,12 @@ export interface KmsPortalProductGroup {
 }
 
 export interface KmsPortalProduct {
+  /**
+   * Stabiele model-identifier. De portal bundelt kleuren van hetzelfde model
+   * hierop — nooit op de modelnaam-tekst (identieke namen kunnen naar
+   * verschillende modellen wijzen). Null/afwezig bij source === 'gripp'.
+   */
+  product_model_id?: string | null;
   model_name: string;
   brand_name: string;
   color: string;
@@ -52,6 +58,8 @@ export interface KmsPortalProduct {
   price_from_cents: number | null;
   image: KmsImage | null;
   variants: KmsPortalVariant[];
+  /** Stabiele kleur-identifier; sleutel voor de kleurkeuze binnen een modelkaart. */
+  color_variant_id?: string | null;
   /** Present for all items from the portal API (backend Task 5/6). */
   source?: 'clothing' | 'gripp';
   /** Set when source === 'gripp'. UUID of the gripp_product row. */
