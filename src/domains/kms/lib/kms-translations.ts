@@ -65,7 +65,7 @@ export const translations = {
     'auth.success': 'Check uw inbox — u ontvangt binnen enkele minuten een link.',
     'auth.no_email_title': 'Geen mail ontvangen?',
     'auth.no_email_body': 'Neem dan contact met ons op',
-    'auth.contact_phone': '0113-573237',
+    'auth.contact_phone': '0113-405390',
     'auth.contact_email': 'kleding@vankruiningen.nl',
     'auth.contact_note': 'Dan zorgen we ervoor dat uw e-mailadres wordt toegevoegd.',
 
@@ -212,7 +212,7 @@ export const translations = {
     'auth.description': "Doe je mail d'rin en je kriegt een link estiere.",
     'auth.no_email_title': "Hin mail ekregn?",
     'auth.no_email_body': "Nim dan kontakt op",
-    'auth.contact_phone': "0113-573237",
+    'auth.contact_phone': "0113-405390",
     'auth.contact_email': "kleding@vankruiningen.nl",
     'auth.contact_note': "Dan zorgen we d'rvoe dat je mail d'rbie komt.",
     'auth.email_label': "E-mail",

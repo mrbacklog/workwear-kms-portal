@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import type { KmsPortalVariant, CartState } from '../types';
 import { kmsColors, kmsFont } from '../lib/kms-theme';
 import { BolusModeContext } from '../lib/kms-bolus-context';
@@ -123,6 +123,32 @@ function Counter({ value, onIncrement, onDecrement, decreaseLabel, increaseLabel
 
 export function SizeSelector({ variants, cart, onQuantityChange, onDetailClick }: SizeSelectorProps) {
   const { t } = useContext(BolusModeContext);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // Een gewone scrollmuis heeft geen horizontale as; vertaal verticaal wielgedrag
+  // naar horizontaal scrollen zolang er iets te scrollen valt.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    function handleWheel(event: WheelEvent) {
+      const node = event.currentTarget as HTMLDivElement;
+      const maxScroll = node.scrollWidth - node.clientWidth;
+      if (maxScroll <= 0) return;
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return; // trackpad doet het zelf al
+
+      const atStart = node.scrollLeft <= 0;
+      const atEnd = node.scrollLeft >= maxScroll - 1;
+      if ((event.deltaY < 0 && atStart) || (event.deltaY > 0 && atEnd)) return; // laat de pagina scrollen
+
+      event.preventDefault();
+      node.scrollLeft += event.deltaY;
+    }
+
+    // Niet-passief, anders mag preventDefault niet.
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
   const subtotalCents = variants.reduce((sum, variant) => {
     const qty = cart.items.find((item) => item.variantId === variant.id)?.quantity ?? 0;
     return sum + qty * (variant.price_cents ?? 0);
@@ -144,6 +170,19 @@ export function SizeSelector({ variants, cart, onQuantityChange, onDetailClick }
         @keyframes kms-swipe-hint {
           0%, 100% { transform: translateX(0); opacity: 0.5; }
           50% { transform: translateX(6px); opacity: 1; }
+        }
+        .kms-size-scroller { scrollbar-width: none; -ms-overflow-style: none; }
+        .kms-size-scroller::-webkit-scrollbar { display: none; }
+        /* Op desktop (muis) is er geen swipe: toon een echte scrollbar. */
+        @media (pointer: fine) {
+          .kms-size-scroller { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.35) transparent; }
+          .kms-size-scroller::-webkit-scrollbar { display: block; height: 8px; }
+          .kms-size-scroller::-webkit-scrollbar-track { background: transparent; }
+          .kms-size-scroller::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.28);
+            border-radius: 4px;
+          }
+          .kms-size-scroller:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.45); }
         }
       `}</style>
 
@@ -176,16 +215,19 @@ export function SizeSelector({ variants, cart, onQuantityChange, onDetailClick }
         </div>
 
         {/* Scrollable size cards */}
-        <div style={{
-          display: 'flex',
-          gap: 8,
-          overflowX: 'auto',
-          padding: '0 0 8px',
-          scrollSnapType: 'x proximity',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}>
+        <div
+          ref={scrollerRef}
+          className="kms-size-scroller"
+          tabIndex={0}
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            padding: '0 0 8px',
+            scrollSnapType: 'x proximity',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {variants.map((variant) => {
             const qty = cart.items.find(item => item.variantId === variant.id)?.quantity ?? 0;
             const hasQty = qty > 0;
